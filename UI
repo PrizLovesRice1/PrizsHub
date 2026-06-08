@@ -72,11 +72,7 @@ else
 end
 
 function OrionLib:IsRunning()
-	if typeof(gethui) == "function" then
-		return Orion.Parent == gethui()
-	else
-		return Orion.Parent == game:GetService("CoreGui")
-	end
+	return Orion ~= nil and Orion.Parent ~= nil
 end
 
 local function AddConnection(Signal, Function)
