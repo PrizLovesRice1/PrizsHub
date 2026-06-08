@@ -1018,7 +1018,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				SliderConfig.Increment = SliderConfig.Increment or 1
 				SliderConfig.Default = SliderConfig.Default or 50
 				SliderConfig.Callback = SliderConfig.Callback or function() end
-				SliderConfig.ValueName = SliderConfig.ValueName or ""
+				SliderConfig.ValueName = SliderConfig.ValueName or SliderConfig.Suffix or ""
 				SliderConfig.Color = SliderConfig.Color or Color3.fromRGB(9, 149, 98)
 				SliderConfig.Flag = SliderConfig.Flag or nil
 				SliderConfig.Save = SliderConfig.Save or false
@@ -1113,12 +1113,30 @@ function OrionLib:MakeWindow(WindowConfig)
 				DropdownConfig.Callback = DropdownConfig.Callback or function() end
 				DropdownConfig.Flag = DropdownConfig.Flag or nil
 				DropdownConfig.Save = DropdownConfig.Save or false
+				DropdownConfig.MultipleOptions = DropdownConfig.MultipleOptions or false
+
+				-- MultipleOptions: Default should be a table e.g. {"Wheat","Carrot"}
+				-- Single select: Default is a string e.g. "Wheat"
+				local isMulti = DropdownConfig.MultipleOptions
+				local multiSelected = {} -- tracks selected options for multi mode
 
 				local Dropdown = {Value = DropdownConfig.Default, Options = DropdownConfig.Options, Buttons = {}, Toggled = false, Type = "Dropdown", Save = DropdownConfig.Save}
 				local MaxElements = 5
 
-				if not table.find(Dropdown.Options, Dropdown.Value) then
-					Dropdown.Value = "..."
+				if isMulti then
+					-- Default can be a table of pre-selected options
+					if type(DropdownConfig.Default) == "table" then
+						for _, v in pairs(DropdownConfig.Default) do
+							multiSelected[v] = true
+						end
+						Dropdown.Value = DropdownConfig.Default
+					else
+						Dropdown.Value = {}
+					end
+				else
+					if not table.find(Dropdown.Options, Dropdown.Value) then
+						Dropdown.Value = "..."
+					end
 				end
 
 				local DropdownList = MakeElement("List")
@@ -1180,7 +1198,23 @@ function OrionLib:MakeWindow(WindowConfig)
 
 				AddConnection(DropdownList:GetPropertyChangedSignal("AbsoluteContentSize"), function()
 					DropdownContainer.CanvasSize = UDim2.new(0, 0, 0, DropdownList.AbsoluteContentSize.Y)
-				end)  
+				end)
+
+				local function UpdateSelectedLabel()
+					if isMulti then
+						local keys = {}
+						for k, v in pairs(multiSelected) do
+							if v then table.insert(keys, k) end
+						end
+						if #keys == 0 then
+							DropdownFrame.F.Selected.Text = "..."
+						else
+							DropdownFrame.F.Selected.Text = table.concat(keys, ", ")
+						end
+					else
+						DropdownFrame.F.Selected.Text = Dropdown.Value
+					end
+				end
 
 				local function AddOptions(Options)
 					for _, Option in pairs(Options) do
@@ -1188,9 +1222,17 @@ function OrionLib:MakeWindow(WindowConfig)
 							MakeElement("Corner", 0, 6),
 							AddThemeObject(SetProps(MakeElement("Label", Option, 13, 0.4), {
 								Position = UDim2.new(0, 8, 0, 0),
-								Size = UDim2.new(1, -8, 1, 0),
+								Size = UDim2.new(1, -30, 1, 0),
 								Name = "Title"
-							}), "Text")
+							}), "Text"),
+							-- checkmark for multi select
+							SetProps(MakeElement("Image", "rbxassetid://3944680095"), {
+								Size = UDim2.new(0, 16, 0, 16),
+								Position = UDim2.new(1, -22, 0.5, -8),
+								ImageColor3 = Color3.fromRGB(255, 255, 255),
+								ImageTransparency = 1,
+								Name = "Check"
+							})
 						}), {
 							Parent = DropdownContainer,
 							Size = UDim2.new(1, 0, 0, 28),
@@ -1198,9 +1240,31 @@ function OrionLib:MakeWindow(WindowConfig)
 							ClipsDescendants = true
 						}), "Divider")
 
+						-- highlight if pre-selected in multi mode
+						if isMulti and multiSelected[Option] then
+							OptionBtn.BackgroundTransparency = 0
+							OptionBtn.Title.TextTransparency = 0
+							OptionBtn.Check.ImageTransparency = 0
+						end
+
 						AddConnection(OptionBtn.MouseButton1Click, function()
-							Dropdown:Set(Option)
-							SaveCfg(game.GameId)
+							if isMulti then
+								multiSelected[Option] = not multiSelected[Option]
+								TweenService:Create(OptionBtn, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = multiSelected[Option] and 0 or 1}):Play()
+								TweenService:Create(OptionBtn.Title, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = multiSelected[Option] and 0 or 0.4}):Play()
+								TweenService:Create(OptionBtn.Check, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageTransparency = multiSelected[Option] and 0 or 1}):Play()
+								local selected = {}
+								for k, v in pairs(multiSelected) do
+									if v then table.insert(selected, k) end
+								end
+								Dropdown.Value = selected
+								UpdateSelectedLabel()
+								DropdownConfig.Callback(Dropdown.Value)
+								SaveCfg(game.GameId)
+							else
+								Dropdown:Set(Option)
+								SaveCfg(game.GameId)
+							end
 						end)
 
 						Dropdown.Buttons[Option] = OptionBtn
@@ -1214,32 +1278,57 @@ function OrionLib:MakeWindow(WindowConfig)
 						end    
 						table.clear(Dropdown.Options)
 						table.clear(Dropdown.Buttons)
+						if isMulti then
+							table.clear(multiSelected)
+						end
 					end
 					Dropdown.Options = Options
 					AddOptions(Dropdown.Options)
 				end  
 
 				function Dropdown:Set(Value)
-					if not table.find(Dropdown.Options, Value) then
-						Dropdown.Value = "..."
-						DropdownFrame.F.Selected.Text = Dropdown.Value
+					if isMulti then
+						-- Value should be a table of options to select
+						table.clear(multiSelected)
+						if type(Value) == "table" then
+							for _, v in pairs(Value) do
+								multiSelected[v] = true
+							end
+						end
+						-- update button visuals
+						for opt, btn in pairs(Dropdown.Buttons) do
+							local sel = multiSelected[opt] == true
+							TweenService:Create(btn, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = sel and 0 or 1}):Play()
+							TweenService:Create(btn.Title, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = sel and 0 or 0.4}):Play()
+							TweenService:Create(btn.Check, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageTransparency = sel and 0 or 1}):Play()
+						end
+						local selected = {}
+						for k, v in pairs(multiSelected) do
+							if v then table.insert(selected, k) end
+						end
+						Dropdown.Value = selected
+						UpdateSelectedLabel()
+						return DropdownConfig.Callback(Dropdown.Value)
+					else
+						if not table.find(Dropdown.Options, Value) then
+							Dropdown.Value = "..."
+							UpdateSelectedLabel()
+							for _, v in pairs(Dropdown.Buttons) do
+								TweenService:Create(v, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+								TweenService:Create(v.Title, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0.4}):Play()
+							end	
+							return
+						end
+						Dropdown.Value = Value
+						UpdateSelectedLabel()
 						for _, v in pairs(Dropdown.Buttons) do
-							TweenService:Create(v,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{BackgroundTransparency = 1}):Play()
-							TweenService:Create(v.Title,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{TextTransparency = 0.4}):Play()
+							TweenService:Create(v, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+							TweenService:Create(v.Title, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0.4}):Play()
 						end	
-						return
+						TweenService:Create(Dropdown.Buttons[Value], TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+						TweenService:Create(Dropdown.Buttons[Value].Title, TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+						return DropdownConfig.Callback(Dropdown.Value)
 					end
-
-					Dropdown.Value = Value
-					DropdownFrame.F.Selected.Text = Dropdown.Value
-
-					for _, v in pairs(Dropdown.Buttons) do
-						TweenService:Create(v,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{BackgroundTransparency = 1}):Play()
-						TweenService:Create(v.Title,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{TextTransparency = 0.4}):Play()
-					end	
-					TweenService:Create(Dropdown.Buttons[Value],TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{BackgroundTransparency = 0}):Play()
-					TweenService:Create(Dropdown.Buttons[Value].Title,TweenInfo.new(.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{TextTransparency = 0}):Play()
-					return DropdownConfig.Callback(Dropdown.Value)
 				end
 
 				AddConnection(Click.MouseButton1Click, function()
@@ -1254,7 +1343,11 @@ function OrionLib:MakeWindow(WindowConfig)
 				end)
 
 				Dropdown:Refresh(Dropdown.Options, false)
-				Dropdown:Set(Dropdown.Value)
+				if not isMulti then
+					Dropdown:Set(Dropdown.Value)
+				else
+					UpdateSelectedLabel()
+				end
 				if DropdownConfig.Flag then				
 					OrionLib.Flags[DropdownConfig.Flag] = Dropdown
 				end
@@ -1642,6 +1735,88 @@ function OrionLib:MakeWindow(WindowConfig)
 					OrionLib.Flags[ColorpickerConfig.Flag] = Colorpicker
 				end
 				return Colorpicker
+			end
+
+			-- ── AddInput (fires on every keystroke) ─────────────────────────
+			function ElementFunction:AddInput(InputConfig)
+				InputConfig = InputConfig or {}
+				InputConfig.Name = InputConfig.Name or "Input"
+				InputConfig.Default = InputConfig.Default or ""
+				InputConfig.Placeholder = InputConfig.Placeholder or "Type here..."
+				InputConfig.TextDisappear = InputConfig.TextDisappear or false
+				InputConfig.Callback = InputConfig.Callback or function() end
+				InputConfig.Flag = InputConfig.Flag or nil
+
+				local Click = SetProps(MakeElement("Button"), {
+					Size = UDim2.new(1, 0, 1, 0)
+				})
+
+				local TextboxActual = AddThemeObject(Create("TextBox", {
+					Size = UDim2.new(1, 0, 1, 0),
+					BackgroundTransparency = 1,
+					TextColor3 = Color3.fromRGB(255, 255, 255),
+					PlaceholderColor3 = Color3.fromRGB(210, 210, 210),
+					PlaceholderText = InputConfig.Placeholder,
+					Font = Enum.Font.GothamSemibold,
+					TextXAlignment = Enum.TextXAlignment.Center,
+					TextSize = 14,
+					ClearTextOnFocus = false
+				}), "Text")
+
+				local TextContainer = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 4), {
+					Size = UDim2.new(0, 24, 0, 24),
+					Position = UDim2.new(1, -12, 0.5, 0),
+					AnchorPoint = Vector2.new(1, 0.5)
+				}), {
+					AddThemeObject(MakeElement("Stroke"), "Stroke"),
+					TextboxActual
+				}), "Main")
+
+				local InputFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 5), {
+					Size = UDim2.new(1, 0, 0, 38),
+					Parent = ItemParent
+				}), {
+					AddThemeObject(SetProps(MakeElement("Label", InputConfig.Name, 15), {
+						Size = UDim2.new(1, -12, 1, 0),
+						Position = UDim2.new(0, 12, 0, 0),
+						Font = Enum.Font.GothamBold,
+						Name = "Content"
+					}), "Text"),
+					AddThemeObject(MakeElement("Stroke"), "Stroke"),
+					TextContainer,
+					Click
+				}), "Second")
+
+				AddConnection(TextboxActual:GetPropertyChangedSignal("Text"), function()
+					TweenService:Create(TextContainer, TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, TextboxActual.TextBounds.X + 16, 0, 24)}):Play()
+					-- fires on every keystroke
+					InputConfig.Callback(TextboxActual.Text)
+					if InputConfig.Flag then
+						OrionLib.Flags[InputConfig.Flag] = TextboxActual.Text
+					end
+				end)
+
+				AddConnection(TextboxActual.FocusLost, function()
+					if InputConfig.TextDisappear then
+						TextboxActual.Text = ""
+					end
+				end)
+
+				TextboxActual.Text = InputConfig.Default
+
+				AddConnection(Click.MouseEnter, function()
+					TweenService:Create(InputFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 3, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 3, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 3)}):Play()
+				end)
+				AddConnection(Click.MouseLeave, function()
+					TweenService:Create(InputFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Second}):Play()
+				end)
+				AddConnection(Click.MouseButton1Up, function()
+					TweenService:Create(InputFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 3, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 3, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 3)}):Play()
+					TextboxActual:CaptureFocus()
+				end)
+				AddConnection(Click.MouseButton1Down, function()
+					TweenService:Create(InputFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R * 255 + 6, OrionLib.Themes[OrionLib.SelectedTheme].Second.G * 255 + 6, OrionLib.Themes[OrionLib.SelectedTheme].Second.B * 255 + 6)}):Play()
+				end)
 			end
 
 			-- ── AddDivider ───────────────────────────────────────────────────
