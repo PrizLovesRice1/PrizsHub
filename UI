@@ -551,7 +551,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	})
 
 	local DragPoint = SetProps(MakeElement("TFrame"), {
-		Size = UDim2.new(1, 0, 0, 50)
+		Size = UDim2.new(1, 0, 1, 0)  -- fills TopBar which is already 50px tall
 	})
 
 	local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 10), {
@@ -637,6 +637,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		}), {
 			WindowName,
 			WindowTopBarLine,
+			DragPoint,
 			AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 7), {
 				Size = UDim2.new(0, 70, 0, 30),
 				Position = UDim2.new(1, -90, 0, 10)
@@ -650,7 +651,6 @@ function OrionLib:MakeWindow(WindowConfig)
 				MinimizeBtn
 			}), "Second"), 
 		}),
-		DragPoint,
 		WindowStuff
 	}), "Main")
 
@@ -775,13 +775,19 @@ function OrionLib:MakeWindow(WindowConfig)
 			Position = UDim2.new(0, 150, 0, 50),
 			Parent = MainWindow,
 			Visible = false,
-			Name = "ItemContainer"
+			Name = "ItemContainer",
+			ScrollingEnabled = true,
+			ScrollingDirection = Enum.ScrollingDirection.Y
 		}), {
 			MakeElement("List", 0, 6),
 			MakeElement("Padding", 15, 10, 10, 15)
 		}), "Divider")
 
 		AddConnection(Container.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+			Container.CanvasSize = UDim2.new(0, 0, 0, Container.UIListLayout.AbsoluteContentSize.Y + 30)
+		end)
+		-- force update on creation so initial content is scrollable immediately
+		task.defer(function()
 			Container.CanvasSize = UDim2.new(0, 0, 0, Container.UIListLayout.AbsoluteContentSize.Y + 30)
 		end)
 
