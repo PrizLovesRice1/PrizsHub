@@ -29,12 +29,12 @@ local OrionLib = {
 	Flags = {},
 	Themes = {
 		Default = {
-			Main    = Color3.fromRGB(10, 4, 20),
-			Second  = Color3.fromRGB(20, 8, 36),
-			Stroke  = Color3.fromRGB(60, 20, 100),
-			Divider = Color3.fromRGB(60, 20, 100),
-			Text    = Color3.fromRGB(235, 210, 255),
-			TextDark = Color3.fromRGB(140, 90, 190)
+			Main    = Color3.fromRGB(15, 5, 28),
+			Second  = Color3.fromRGB(28, 10, 50),
+			Stroke  = Color3.fromRGB(80, 25, 130),
+			Divider = Color3.fromRGB(80, 25, 130),
+			Text    = Color3.fromRGB(240, 215, 255),
+			TextDark = Color3.fromRGB(160, 100, 210)
 		}
 	},
 	SelectedTheme = "Default",
@@ -291,7 +291,7 @@ CreateElement("Padding", function(Bottom, Left, Right, Top)
 end)
 
 CreateElement("TFrame", function()
-	return Create("Frame", {BackgroundTransparency = 0.18})
+	return Create("Frame", {BackgroundTransparency = 0})
 end)
 
 CreateElement("Frame", function(Color)
@@ -557,7 +557,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 10), {
 		Size                  = UDim2.new(0, 150, 1, -50),
 		Position              = UDim2.new(0, 0, 0, 50),
-		BackgroundTransparency = 0.55
+		BackgroundTransparency = 0
 	}), {
 		AddThemeObject(SetProps(MakeElement("Frame"), {
 			Size     = UDim2.new(1, 0, 0, 10),
