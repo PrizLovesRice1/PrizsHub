@@ -5,6 +5,32 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local HttpService = game:GetService("HttpService")
 
+-- ── Executor Detection ──────────────────────────────────────────────────────
+local function GetExecutor()
+	if identifyexecutor then
+		local ok, name = pcall(identifyexecutor)
+		if ok and name then return tostring(name):split(" ")[1] end
+	end
+	if syn then return "Synapse" end
+	if KRNL_LOADED then return "Krnl" end
+	if getexecutorname then
+		local ok, name = pcall(getexecutorname)
+		if ok and name then return tostring(name) end
+	end
+	return "Unknown"
+end
+
+local function GetPing()
+	local ok, ping = pcall(function()
+		return math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+	end)
+	return ok and ping or 0
+end
+
+local function GetFPS()
+	return math.floor(1 / RunService.RenderStepped:Wait())
+end
+
 local OrionLib = {
 	Elements = {},
 	ThemeObjects = {},
@@ -481,6 +507,18 @@ function OrionLib:MakeWindow(WindowConfig)
 		Size = UDim2.new(1, -80, 1, 0)  -- leaves room for the close/minimize buttons
 	})
 
+	local StatsLbl = Create("TextLabel", {
+		Name             = "StatsLbl",
+		Text             = "FPS: -- | Ping: -- | " .. GetExecutor(),
+		Font             = Enum.Font.Gotham,
+		TextSize         = 10,
+		TextColor3       = OrionLib.Themes[OrionLib.SelectedTheme].TextDark,
+		BackgroundTransparency = 1,
+		Size             = UDim2.new(1, -60, 0, 11),
+		Position         = UDim2.new(0, 50, 1, -23),
+		TextXAlignment   = Enum.TextXAlignment.Left
+	})
+
 	local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 10), {
 		Size     = UDim2.new(0, 150, 1, -50),
 		Position = UDim2.new(0, 0, 0, 50)
@@ -526,17 +564,14 @@ function OrionLib:MakeWindow(WindowConfig)
 				AddThemeObject(MakeElement("Stroke"), "Stroke"),
 				MakeElement("Corner", 1)
 			}),
-			AddThemeObject(SetProps(MakeElement("Label", LocalPlayer.DisplayName, WindowConfig.HidePremium and 14 or 13), {
-				Size             = UDim2.new(1, -60, 0, 13),
-				Position         = WindowConfig.HidePremium and UDim2.new(0, 50, 0, 19) or UDim2.new(0, 50, 0, 12),
+			AddThemeObject(SetProps(MakeElement("Label", LocalPlayer.DisplayName, 13), {
+				Size             = UDim2.new(1, -60, 0, 14),
+				Position         = UDim2.new(0, 50, 0, 9),
 				Font             = Enum.Font.GothamBold,
-				ClipsDescendants = true
+				ClipsDescendants = true,
+				Name             = "DisplayNameLbl"
 			}), "Text"),
-			AddThemeObject(SetProps(MakeElement("Label", "", 12), {
-				Size     = UDim2.new(1, -60, 0, 12),
-				Position = UDim2.new(0, 50, 1, -25),
-				Visible  = not WindowConfig.HidePremium
-			}), "TextDark")
+			StatsLbl
 		})
 	}), "Second")
 
@@ -593,21 +628,120 @@ function OrionLib:MakeWindow(WindowConfig)
 
 	AddDraggingFunctionality(DragPoint, MainWindow)
 
-	AddConnection(CloseBtn.MouseButton1Up, function()
-		MainWindow.Visible = false
+	-- ── FPS / Ping live update ─────────────────────────────────────────────
+	local fpsBuffer = {}
+	AddConnection(RunService.RenderStepped, function(dt)
+		table.insert(fpsBuffer, dt)
+		if #fpsBuffer > 20 then table.remove(fpsBuffer, 1) end
+		if StatsLbl and StatsLbl.Parent then
+			local avgDt = 0
+			for _, v in ipairs(fpsBuffer) do avgDt = avgDt + v end
+			avgDt = avgDt / #fpsBuffer
+			local fps   = math.floor(1 / avgDt)
+			local ping  = GetPing()
+			StatsLbl.Text = "FPS: " .. fps .. "  |  Ping: " .. ping .. "ms  |  " .. GetExecutor()
+		end
+	end)
+
+	-- ── Resizable UI ───────────────────────────────────────────────────────
+	-- Drag the bottom-right corner to resize
+	local ResizeHandle = Create("TextButton", {
+		Text                = "",
+		BackgroundTransparency = 1,
+		Size                = UDim2.new(0, 16, 0, 16),
+		Position            = UDim2.new(1, -16, 1, -16),
+		ZIndex              = 10,
+		AutoButtonColor     = false,
+		Parent              = MainWindow
+	})
+	-- small visual grip dots
+	local GripDots = Create("Frame", {
+		BackgroundTransparency = 1,
+		Size                   = UDim2.new(1, 0, 1, 0),
+		Parent                 = ResizeHandle
+	})
+	for r = 0, 1 do
+		for c = 0, 1 do
+			Create("Frame", {
+				BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Stroke,
+				Size             = UDim2.new(0, 3, 0, 3),
+				Position         = UDim2.new(0, 2 + c * 6, 0, 2 + r * 6),
+				BorderSizePixel  = 0,
+				Parent           = GripDots
+			})
+		end
+	end
+
+	local resizing = false
+	local resizeStart, resizeStartSize
+	local minW, minH = 400, 250
+
+	AddConnection(ResizeHandle.InputBegan, function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			resizing       = true
+			resizeStart    = Vector2.new(Input.Position.X, Input.Position.Y)
+			resizeStartSize = Vector2.new(MainWindow.AbsoluteSize.X, MainWindow.AbsoluteSize.Y)
+		end
+	end)
+	AddConnection(UserInputService.InputEnded, function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			resizing = false
+		end
+	end)
+	AddConnection(UserInputService.InputChanged, function(Input)
+		if resizing and Input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = Vector2.new(Input.Position.X, Input.Position.Y) - resizeStart
+			local newW  = math.max(minW, resizeStartSize.X + delta.X)
+			local newH  = math.max(minH, resizeStartSize.Y + delta.Y)
+			MainWindow.Size = UDim2.new(0, newW, 0, newH)
+			-- keep sidebar and content fitting the new size
+			WindowStuff.Size = UDim2.new(0, 150, 1, -50)
+		end
+	end)
+
+	-- ── Close with smooth scale-out tween ─────────────────────────────────
+	local function CloseUI()
 		UIHidden = true
+		local uiScale = MainWindow:FindFirstChildWhichIsA("UIScale")
+		if not uiScale then
+			uiScale        = Instance.new("UIScale")
+			uiScale.Parent = MainWindow
+		end
+		TweenService:Create(uiScale,    TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Scale = 0}):Play()
+		TweenService:Create(MainWindow, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
+		task.wait(0.35)
+		MainWindow.Visible = false
+		uiScale.Scale = 1
+		MainWindow.BackgroundTransparency = 0
+	end
+
+	local function OpenUI()
+		UIHidden = false
+		local uiScale = MainWindow:FindFirstChildWhichIsA("UIScale")
+		if not uiScale then
+			uiScale        = Instance.new("UIScale")
+			uiScale.Parent = MainWindow
+		end
+		uiScale.Scale = 0
+		MainWindow.BackgroundTransparency = 1
+		MainWindow.Visible = true
+		TweenService:Create(uiScale,    TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+		TweenService:Create(MainWindow, TweenInfo.new(0.35, Enum.EasingStyle.Quint), {BackgroundTransparency = 0}):Play()
+	end
+
+	AddConnection(CloseBtn.MouseButton1Up, function()
+		CloseUI()
 		OrionLib:MakeNotification({
 			Name    = "Interface Hidden",
-			Content = "Tap RightShift to reopen the interface",
-			Time    = 5
+			Content = "Press RightShift to reopen",
+			Time    = 4
 		})
 		WindowConfig.CloseCallback()
 	end)
 
 	AddConnection(UserInputService.InputBegan, function(Input)
 		if Input.KeyCode == Enum.KeyCode.RightShift and UIHidden then
-			MainWindow.Visible = true
-			UIHidden = false
+			OpenUI()
 		end
 	end)
 
@@ -826,10 +960,22 @@ function OrionLib:MakeWindow(WindowConfig)
 					AddThemeObject(MakeElement("Stroke"), "Stroke"),
 					Click
 				}), "Second")
-				AddConnection(Click.MouseEnter,      function() TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+3, OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+3, OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+3)}):Play() end)
-				AddConnection(Click.MouseLeave,      function() TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Second}):Play() end)
-				AddConnection(Click.MouseButton1Up,  function() TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+3, OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+3, OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+3)}):Play() spawn(function() ButtonConfig.Callback() end) end)
-				AddConnection(Click.MouseButton1Down, function() TweenService:Create(ButtonFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+6, OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+6, OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+6)}):Play() end)
+				AddConnection(Click.MouseEnter, function()
+					TweenService:Create(ButtonFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+3, OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+3, OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+3)}):Play()
+					TweenService:Create(ButtonFrame.Content, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextSize = 16}):Play()
+				end)
+				AddConnection(Click.MouseLeave, function()
+					TweenService:Create(ButtonFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Second}):Play()
+					TweenService:Create(ButtonFrame.Content, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextSize = 15}):Play()
+				end)
+				AddConnection(Click.MouseButton1Up, function()
+					TweenService:Create(ButtonFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+3, OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+3, OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+3)}):Play()
+					spawn(function() ButtonConfig.Callback() end)
+				end)
+				AddConnection(Click.MouseButton1Down, function()
+					TweenService:Create(ButtonFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+6, OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+6, OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+6)}):Play()
+					TweenService:Create(ButtonFrame.Content, TweenInfo.new(0.1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextSize = 14}):Play()
+				end)
 				function Button:Set(ButtonText) ButtonFrame.Content.Text = ButtonText end
 				return Button
 			end
@@ -1275,7 +1421,189 @@ function OrionLib:MakeWindow(WindowConfig)
 end
 
 function OrionLib:Destroy()
+	-- smooth scale-out before destroy
+	for _, win in ipairs(Orion:GetDescendants()) do
+		if win:IsA("Frame") and win.Name:find("RoundFrame") then
+			local s = win:FindFirstChildWhichIsA("UIScale")
+			if s then TweenService:Create(s, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Scale = 0}):Play() end
+		end
+	end
+	task.wait(0.3)
+	for _, c in next, OrionLib.Connections do pcall(function() c:Disconnect() end) end
 	Orion:Destroy()
+end
+
+-- ── UI Settings Tab builder ───────────────────────────────────────────────────
+-- Call this after creating your window and all tabs to append a built-in settings tab
+function OrionLib:MakeUISettings(Window, SettingsConfig)
+	SettingsConfig = SettingsConfig or {}
+	SettingsConfig.ConfigName = SettingsConfig.ConfigName or "config"
+
+	local UITab = Window:MakeTab({ Name = "UI Settings", Icon = "rbxassetid://4483345875" })
+
+	-- ── Config folder helper ──────────────────────────────────────────────
+	local function getFolder()
+		return OrionLib.Folder or "OrionConfig"
+	end
+	local function getPath(name)
+		return getFolder() .. "/" .. (name or SettingsConfig.ConfigName) .. ".json"
+	end
+	local function ensureFolder()
+		pcall(function()
+			if not isfolder(getFolder()) then makefolder(getFolder()) end
+		end)
+	end
+
+	-- ── Save config ───────────────────────────────────────────────────────
+	local function DoSave(name)
+		ensureFolder()
+		local data = {}
+		for flag, elem in pairs(OrionLib.Flags) do
+			if elem.Type == "Colorpicker" then
+				data[flag] = {R = elem.Value.R*255, G = elem.Value.G*255, B = elem.Value.B*255}
+			elseif elem.Value ~= nil then
+				data[flag] = elem.Value
+			end
+		end
+		local ok, err = pcall(writefile, getPath(name), HttpService:JSONEncode(data))
+		if ok then
+			OrionLib:MakeNotification({ Name = "Config Saved", Content = "Saved as '" .. (name or SettingsConfig.ConfigName) .. "'", Time = 4 })
+		else
+			OrionLib:MakeNotification({ Name = "Save Failed", Content = tostring(err), Time = 5 })
+		end
+	end
+
+	-- ── Load config ───────────────────────────────────────────────────────
+	local function DoLoad(name)
+		local ok, raw = pcall(readfile, getPath(name))
+		if not ok or not raw or raw == "" then
+			OrionLib:MakeNotification({ Name = "Load Failed", Content = "No config found: " .. (name or SettingsConfig.ConfigName), Time = 4 })
+			return
+		end
+		local decOk, data = pcall(function() return HttpService:JSONDecode(raw) end)
+		if not decOk then
+			OrionLib:MakeNotification({ Name = "Load Failed", Content = "Invalid config file.", Time = 4 })
+			return
+		end
+		for flag, val in pairs(data) do
+			if OrionLib.Flags[flag] then
+				spawn(function()
+					if OrionLib.Flags[flag].Type == "Colorpicker" then
+						OrionLib.Flags[flag]:Set(Color3.fromRGB(val.R, val.G, val.B))
+					else
+						OrionLib.Flags[flag]:Set(val)
+					end
+				end)
+			end
+		end
+		OrionLib:MakeNotification({ Name = "Config Loaded", Content = "Loaded '" .. (name or SettingsConfig.ConfigName) .. "'", Time = 4 })
+	end
+
+	-- ── Auto-load on start ────────────────────────────────────────────────
+	task.defer(function()
+		pcall(function()
+			if isfile and isfile(getPath(SettingsConfig.ConfigName)) then
+				DoLoad(SettingsConfig.ConfigName)
+			end
+		end)
+	end)
+
+	UITab:AddSection({ Name = "Configuration" })
+
+	UITab:AddButton({
+		Name     = "Save Config",
+		Callback = function() DoSave(SettingsConfig.ConfigName) end
+	})
+
+	UITab:AddButton({
+		Name     = "Load Config",
+		Callback = function() DoLoad(SettingsConfig.ConfigName) end
+	})
+
+	-- Export: copies JSON to clipboard
+	UITab:AddButton({
+		Name     = "Export Config (Copy)",
+		Callback = function()
+			local data = {}
+			for flag, elem in pairs(OrionLib.Flags) do
+				if elem.Type == "Colorpicker" then
+					data[flag] = {R = elem.Value.R*255, G = elem.Value.G*255, B = elem.Value.B*255}
+				elseif elem.Value ~= nil then
+					data[flag] = elem.Value
+				end
+			end
+			local json = HttpService:JSONEncode(data)
+			pcall(setclipboard, json)
+			OrionLib:MakeNotification({ Name = "Exported", Content = "Config copied to clipboard.", Time = 4 })
+		end
+	})
+
+	-- Import: paste JSON from clipboard
+	UITab:AddTextbox({
+		Name          = "Import Config (Paste JSON)",
+		Default       = "",
+		TextDisappear = true,
+		Callback      = function(Text)
+			if Text == "" then return end
+			local ok, data = pcall(function() return HttpService:JSONDecode(Text) end)
+			if not ok then
+				OrionLib:MakeNotification({ Name = "Import Failed", Content = "Invalid JSON.", Time = 4 })
+				return
+			end
+			for flag, val in pairs(data) do
+				if OrionLib.Flags[flag] then
+					spawn(function()
+						if OrionLib.Flags[flag].Type == "Colorpicker" then
+							OrionLib.Flags[flag]:Set(Color3.fromRGB(val.R, val.G, val.B))
+						else
+							OrionLib.Flags[flag]:Set(val)
+						end
+					end)
+				end
+			end
+			OrionLib:MakeNotification({ Name = "Imported", Content = "Config applied.", Time = 4 })
+		end
+	})
+
+	UITab:AddDivider()
+	UITab:AddSection({ Name = "Keybind" })
+
+	UITab:AddBind({
+		Name     = "Hide/Show UI",
+		Default  = Enum.KeyCode.RightShift,
+		Hold     = false,
+		Callback = function()
+			-- toggled by the window's own RightShift listener
+		end
+	})
+
+	UITab:AddDivider()
+	UITab:AddSection({ Name = "Danger Zone" })
+
+	UITab:AddButton({
+		Name     = "Reset All Settings",
+		Callback = function()
+			for _, elem in pairs(OrionLib.Flags) do
+				if elem.Type == "Toggle" then
+					pcall(function() elem:Set(false) end)
+				elseif elem.Type == "Colorpicker" then
+					pcall(function() elem:Set(Color3.fromRGB(255, 255, 255)) end)
+				end
+			end
+			OrionLib:MakeNotification({ Name = "Reset", Content = "All toggles/colors reset.", Time = 4 })
+		end
+	})
+
+	UITab:AddButton({
+		Name     = "Destroy UI",
+		Callback = function()
+			OrionLib:MakeNotification({ Name = "Goodbye", Content = "UI destroyed.", Time = 2 })
+			task.wait(2.2)
+			OrionLib:Destroy()
+		end
+	})
+
+	return UITab
 end
 
 return OrionLib
