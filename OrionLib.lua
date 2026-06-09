@@ -29,10 +29,10 @@ local OrionLib = {
 	Flags = {},
 	Themes = {
 		Default = {
-			Main    = Color3.fromRGB(15, 5, 28),
-			Second  = Color3.fromRGB(28, 10, 50),
-			Stroke  = Color3.fromRGB(80, 25, 130),
-			Divider = Color3.fromRGB(80, 25, 130),
+			Main    = Color3.fromRGB(12, 4, 24),
+			Second  = Color3.fromRGB(22, 8, 42),
+			Stroke  = Color3.fromRGB(90, 30, 140),
+			Divider = Color3.fromRGB(90, 30, 140),
 			Text    = Color3.fromRGB(240, 215, 255),
 			TextDark = Color3.fromRGB(160, 100, 210)
 		}
@@ -643,8 +643,8 @@ function OrionLib:MakeWindow(WindowConfig)
 		Parent                = Orion,
 		Position              = UDim2.new(0.5, -307, 0.5, -172),
 		Size                  = UDim2.new(0, 615, 0, 344),
-		ClipsDescendants      = false,
-		BackgroundTransparency = 1
+		ClipsDescendants      = true,
+		BackgroundTransparency = 0
 	}), {
 		-- TopBar contains DragPoint so it can never overlap the content area
 		SetChildren(SetProps(MakeElement("TFrame"), {
@@ -844,10 +844,10 @@ function OrionLib:MakeWindow(WindowConfig)
 	local SettingsPanel = SetChildren(SetProps(MakeElement("RoundFrame",
 		OrionLib.Themes[OrionLib.SelectedTheme].Main, 0, 8), {
 		Size     = UDim2.new(0, 200, 0, 8),
-		Position = UDim2.new(1, -210, 0, 52),
-		ZIndex   = 50,
+		Position = UDim2.new(0, 0, 0, 0),
+		ZIndex   = 100,
 		Visible  = false,
-		Parent   = MainWindow
+		Parent   = Orion
 	}), {
 		AddThemeObject(MakeElement("Stroke"), "Stroke"),
 		MakeElement("Padding", 6, 6, 6, 6),
@@ -1056,11 +1056,13 @@ function OrionLib:MakeWindow(WindowConfig)
 
 	local function openSettingsPanel()
 		SettingsPanelOpen = true
-		-- recompute size each open in case of layout changes
 		local ll = SettingsPanel:FindFirstChild("UIListLayout")
-		if ll then
-			SettingsPanel.Size = UDim2.new(0, 200, 0, ll.AbsoluteContentSize.Y + 12)
-		end
+		local h = ll and ll.AbsoluteContentSize.Y + 12 or 200
+		-- position below the gear button in screen coords
+		local btnPos = SettingsBtn.AbsolutePosition
+		local winPos = MainWindow.AbsolutePosition
+		SettingsPanel.Position = UDim2.new(0, btnPos.X - 100, 0, btnPos.Y + 34)
+		SettingsPanel.Size = UDim2.new(0, 200, 0, h)
 		SettingsPanel.Visible = true
 		TweenService:Create(SettingsBtn.Ico, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {Rotation = 90}):Play()
 	end
@@ -1125,7 +1127,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	for r = 0, 1 do
 		for c = 0, 1 do
 			Create("Frame", {
-				BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Stroke,
+				BackgroundColor3 = Color3.fromRGB(90, 30, 140),
 				Size             = UDim2.new(0, 3, 0, 3),
 				Position         = UDim2.new(0, 2 + c * 6, 0, 2 + r * 6),
 				BorderSizePixel  = 0,
