@@ -1,11 +1,10 @@
- 
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local HttpService = game:GetService("HttpService")
- 
+
 -- -- Executor Detection ------------------------------------------------------
 local function GetExecutor()
 	if identifyexecutor then
@@ -20,9 +19,9 @@ local function GetExecutor()
 	end
 	return "Unknown"
 end
- 
- 
- 
+
+
+
 local OrionLib = {
 	Elements = {},
 	ThemeObjects = {},
@@ -42,9 +41,9 @@ local OrionLib = {
 	Folder = nil,
 	SaveCfg = false
 }
- 
+
 local Icons = {}
- 
+
 pcall(function()
 	local raw = game:HttpGet("https://raw.githubusercontent.com/evoincorp/lucideblox/master/src/modules/util/icons.json")
 	if raw and #raw > 10 then
@@ -54,7 +53,7 @@ pcall(function()
 		end
 	end
 end)
- 
+
 local function GetIcon(IconName)
 	if Icons[IconName] ~= nil then
 		return Icons[IconName]
@@ -62,7 +61,7 @@ local function GetIcon(IconName)
 		return nil
 	end
 end
- 
+
 local Orion = Instance.new("ScreenGui")
 Orion.Name = "Orion"
 pcall(function()
@@ -74,7 +73,7 @@ end)
 if not Orion.Parent then
 	Orion.Parent = (typeof(gethui) == "function" and gethui()) or game.CoreGui
 end
- 
+
 if typeof(gethui) == "function" then
 	for _, Interface in ipairs(gethui():GetChildren()) do
 		if Interface.Name == Orion.Name and Interface ~= Orion then
@@ -88,11 +87,11 @@ else
 		end
 	end
 end
- 
+
 function OrionLib:IsRunning()
 	return Orion ~= nil and Orion.Parent ~= nil
 end
- 
+
 local function AddConnection(Signal, Function)
 	if not OrionLib:IsRunning() then
 		return
@@ -101,7 +100,7 @@ local function AddConnection(Signal, Function)
 	table.insert(OrionLib.Connections, SignalConnect)
 	return SignalConnect
 end
- 
+
 task.spawn(function()
 	while OrionLib:IsRunning() do
 		wait()
@@ -110,7 +109,7 @@ task.spawn(function()
 		Connection:Disconnect()
 	end
 end)
- 
+
 local function AddDraggingFunctionality(DragPoint, Main)
 	pcall(function()
 		local Dragging, DragInput, MousePos, FramePos = false
@@ -139,7 +138,7 @@ local function AddDraggingFunctionality(DragPoint, Main)
 		end)
 	end)
 end
- 
+
 local function Create(Name, Properties, Children)
 	local Object = Instance.new(Name)
 	for i, v in next, Properties or {} do
@@ -150,38 +149,38 @@ local function Create(Name, Properties, Children)
 	end
 	return Object
 end
- 
+
 local function CreateElement(ElementName, ElementFunction)
 	OrionLib.Elements[ElementName] = function(...)
 		return ElementFunction(...)
 	end
 end
- 
+
 local function MakeElement(ElementName, ...)
 	local NewElement = OrionLib.Elements[ElementName](...)
 	return NewElement
 end
- 
+
 local function SetProps(Element, Props)
 	table.foreach(Props, function(Property, Value)
 		Element[Property] = Value
 	end)
 	return Element
 end
- 
+
 local function SetChildren(Element, Children)
 	table.foreach(Children, function(_, Child)
 		Child.Parent = Element
 	end)
 	return Element
 end
- 
+
 local function Round(Number, Factor)
 	local Result = math.floor(Number / Factor + (math.sign(Number) * 0.5)) * Factor
 	if Result < 0 then Result = Result + Factor end
 	return Result
 end
- 
+
 local function ReturnProperty(Object)
 	if Object:IsA("Frame") or Object:IsA("TextButton") then
 		return "BackgroundColor3"
@@ -199,7 +198,7 @@ local function ReturnProperty(Object)
 		return "ImageColor3"
 	end
 end
- 
+
 local function AddThemeObject(Object, Type)
 	if not OrionLib.ThemeObjects[Type] then
 		OrionLib.ThemeObjects[Type] = {}
@@ -208,7 +207,7 @@ local function AddThemeObject(Object, Type)
 	Object[ReturnProperty(Object)] = OrionLib.Themes[OrionLib.SelectedTheme][Type]
 	return Object
 end
- 
+
 local function SetTheme()
 	for Name, Type in pairs(OrionLib.ThemeObjects) do
 		for _, Object in pairs(Type) do
@@ -216,15 +215,15 @@ local function SetTheme()
 		end
 	end
 end
- 
+
 local function PackColor(Color)
 	return {R = Color.R * 255, G = Color.G * 255, B = Color.B * 255}
 end
- 
+
 local function UnpackColor(Color)
 	return Color3.fromRGB(Color.R, Color.G, Color.B)
 end
- 
+
 local function LoadCfg(Config)
 	local Data = HttpService:JSONDecode(Config)
 	table.foreach(Data, function(a, b)
@@ -241,7 +240,7 @@ local function LoadCfg(Config)
 		end
 	end)
 end
- 
+
 local function SaveCfg(Name)
 	if not OrionLib.SaveCfg then return end
 	pcall(function()
@@ -258,10 +257,10 @@ local function SaveCfg(Name)
 		writefile(OrionLib.Folder .. "/" .. Name .. ".txt", tostring(HttpService:JSONEncode(Data)))
 	end)
 end
- 
+
 local WhitelistedMouse = {Enum.UserInputType.MouseButton1, Enum.UserInputType.MouseButton2, Enum.UserInputType.MouseButton3}
 local BlacklistedKeys = {Enum.KeyCode.Unknown, Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D, Enum.KeyCode.Up, Enum.KeyCode.Left, Enum.KeyCode.Down, Enum.KeyCode.Right, Enum.KeyCode.Slash, Enum.KeyCode.Tab, Enum.KeyCode.Backspace, Enum.KeyCode.Escape}
- 
+
 local function CheckKey(Table, Key)
 	for _, v in next, Table do
 		if v == Key then
@@ -269,19 +268,19 @@ local function CheckKey(Table, Key)
 		end
 	end
 end
- 
+
 CreateElement("Corner", function(Scale, Offset)
 	return Create("UICorner", {CornerRadius = UDim.new(Scale or 0, Offset or 10)})
 end)
- 
+
 CreateElement("Stroke", function(Color, Thickness)
 	return Create("UIStroke", {Color = Color or Color3.fromRGB(255, 255, 255), Thickness = Thickness or 1})
 end)
- 
+
 CreateElement("List", function(Scale, Offset)
 	return Create("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(Scale or 0, Offset or 0)})
 end)
- 
+
 CreateElement("Padding", function(Bottom, Left, Right, Top)
 	return Create("UIPadding", {
 		PaddingBottom = UDim.new(0, Bottom or 4),
@@ -290,15 +289,15 @@ CreateElement("Padding", function(Bottom, Left, Right, Top)
 		PaddingTop    = UDim.new(0, Top    or 4)
 	})
 end)
- 
+
 CreateElement("TFrame", function()
 	return Create("Frame", {BackgroundTransparency = 0.18})
 end)
- 
+
 CreateElement("Frame", function(Color)
 	return Create("Frame", {BackgroundColor3 = Color or Color3.fromRGB(255, 255, 255), BorderSizePixel = 0})
 end)
- 
+
 CreateElement("RoundFrame", function(Color, Scale, Offset)
 	return Create("Frame", {
 		BackgroundColor3 = Color or Color3.fromRGB(255, 255, 255),
@@ -307,11 +306,11 @@ CreateElement("RoundFrame", function(Color, Scale, Offset)
 		Create("UICorner", {CornerRadius = UDim.new(Scale, Offset)})
 	})
 end)
- 
+
 CreateElement("Button", function()
 	return Create("TextButton", {Text = "", AutoButtonColor = false, BackgroundTransparency = 1, BorderSizePixel = 0})
 end)
- 
+
 CreateElement("ScrollFrame", function(Color, Width)
 	return Create("ScrollingFrame", {
 		BackgroundTransparency = 1,
@@ -324,7 +323,7 @@ CreateElement("ScrollFrame", function(Color, Width)
 		CanvasSize            = UDim2.new(0, 0, 0, 0)
 	})
 end)
- 
+
 CreateElement("Image", function(ImageID)
 	local ImageNew = Create("ImageLabel", {Image = ImageID, BackgroundTransparency = 1})
 	if GetIcon(ImageID) ~= nil then
@@ -332,11 +331,11 @@ CreateElement("Image", function(ImageID)
 	end
 	return ImageNew
 end)
- 
+
 CreateElement("ImageButton", function(ImageID)
 	return Create("ImageButton", {Image = ImageID, BackgroundTransparency = 1})
 end)
- 
+
 CreateElement("Label", function(Text, TextSize, Transparency)
 	return Create("TextLabel", {
 		Text              = Text or "",
@@ -349,7 +348,7 @@ CreateElement("Label", function(Text, TextSize, Transparency)
 		TextXAlignment    = Enum.TextXAlignment.Left
 	})
 end)
- 
+
 local NotificationHolder = SetProps(SetChildren(MakeElement("TFrame"), {
 	SetProps(MakeElement("List"), {
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -363,20 +362,20 @@ local NotificationHolder = SetProps(SetChildren(MakeElement("TFrame"), {
 	AnchorPoint = Vector2.new(1, 1),
 	Parent      = Orion
 })
- 
+
 function OrionLib:MakeNotification(NotificationConfig)
 	spawn(function()
 		NotificationConfig.Name    = NotificationConfig.Name    or "Notification"
 		NotificationConfig.Content = NotificationConfig.Content or "Test"
 		NotificationConfig.Image   = NotificationConfig.Image   or "rbxassetid://4384403532"
 		NotificationConfig.Time    = NotificationConfig.Time    or 15
- 
+
 		local NotificationParent = SetProps(MakeElement("TFrame"), {
 			Size          = UDim2.new(1, 0, 0, 0),
 			AutomaticSize = Enum.AutomaticSize.Y,
 			Parent        = NotificationHolder
 		})
- 
+
 		local NotificationFrame = SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(25, 25, 25), 0, 10), {
 			Parent              = NotificationParent,
 			Size                = UDim2.new(1, 0, 0, 0),
@@ -407,7 +406,7 @@ function OrionLib:MakeNotification(NotificationConfig)
 				TextWrapped   = true
 			})
 		})
- 
+
 		TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0, 0, 0, 0)}):Play()
 		wait(NotificationConfig.Time - 0.88)
 		TweenService:Create(NotificationFrame.Icon,    TweenInfo.new(0.4, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play()
@@ -422,7 +421,7 @@ function OrionLib:MakeNotification(NotificationConfig)
 		NotificationFrame:Destroy()
 	end)
 end
- 
+
 function OrionLib:Init()
 	if OrionLib.SaveCfg then
 		pcall(function()
@@ -437,14 +436,14 @@ function OrionLib:Init()
 		end)
 	end
 end
- 
+
 function OrionLib:MakeWindow(WindowConfig)
 	local FirstTab = true
 	local Minimized = false
 	local Loaded = false
 	local UIHidden = false
 	local ToggleKey = Enum.KeyCode.RightShift  -- changeable from settings panel
- 
+
 	WindowConfig = WindowConfig or {}
 	WindowConfig.Name         = WindowConfig.Name         or "Priz Hub"
 	WindowConfig.ConfigFolder = WindowConfig.ConfigFolder or WindowConfig.Name
@@ -460,7 +459,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	WindowConfig.IntroIcon     = WindowConfig.IntroIcon     or "rbxassetid://8834748103"
 	OrionLib.Folder  = WindowConfig.ConfigFolder
 	OrionLib.SaveCfg = WindowConfig.SaveConfig
- 
+
 	if WindowConfig.SaveConfig then
 		pcall(function()
 			if not isfolder(WindowConfig.ConfigFolder) then
@@ -468,18 +467,18 @@ function OrionLib:MakeWindow(WindowConfig)
 			end
 		end)
 	end
- 
+
 	local TabHolder = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 4), {
 		Size = UDim2.new(1, 0, 1, -50)
 	}), {
 		MakeElement("List"),
 		MakeElement("Padding", 8, 0, 0, 8)
 	}), "Divider")
- 
+
 	AddConnection(TabHolder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
 		TabHolder.CanvasSize = UDim2.new(0, 0, 0, TabHolder.UIListLayout.AbsoluteContentSize.Y + 16)
 	end)
- 
+
 	-- Purple pill badge - sits right beside the window title text
 	local PillBadge = Create("Frame", {
 		BackgroundColor3 = Color3.fromRGB(90, 30, 150),
@@ -501,7 +500,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		ZIndex           = 4,
 		Parent           = PillBadge
 	})
- 
+
 	-- Settings button - clean gear icon using Roblox image
 	local SettingsBtn = SetChildren(SetProps(MakeElement("Button"), {
 		Size                   = UDim2.new(0, 35, 1, 0),
@@ -514,7 +513,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			Name           = "Ico"
 		}), "Text")
 	})
- 
+
 	local CloseBtn = SetChildren(SetProps(MakeElement("Button"), {
 		Size                = UDim2.new(0, 35, 1, 0),
 		Position            = UDim2.new(0, 70, 0, 0),
@@ -525,7 +524,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			Size     = UDim2.new(0, 18, 0, 18)
 		}), "Text")
 	})
- 
+
 	local MinimizeBtn = SetChildren(SetProps(MakeElement("Button"), {
 		Size                = UDim2.new(0, 35, 1, 0),
 		Position            = UDim2.new(0, 35, 0, 0),
@@ -537,12 +536,12 @@ function OrionLib:MakeWindow(WindowConfig)
 			Name     = "Ico"
 		}), "Text")
 	})
- 
+
 	-- DragPoint lives inside TopBar so it never blocks content
 	local DragPoint = SetProps(MakeElement("TFrame"), {
 		Size = UDim2.new(1, -80, 1, 0)  -- leaves room for the close/minimize buttons
 	})
- 
+
 	local ExecutorLbl = Create("TextLabel", {
 		Name             = "ExecutorLbl",
 		Text             = GetExecutor(),
@@ -554,7 +553,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		Position         = UDim2.new(0, 50, 1, -25),
 		TextXAlignment   = Enum.TextXAlignment.Left
 	})
- 
+
 	local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 10), {
 		Size                  = UDim2.new(0, 150, 1, -50),
 		Position              = UDim2.new(0, 0, 0, 50),
@@ -615,14 +614,14 @@ function OrionLib:MakeWindow(WindowConfig)
 			ExecutorLbl
 		})
 	}), "Second")
- 
+
 	local WindowName = AddThemeObject(SetProps(MakeElement("Label", WindowConfig.Name, 14), {
 		Size     = UDim2.new(0, 250, 0, 26),
 		Position = UDim2.new(0, 15, 0, 8),
 		Font     = Enum.Font.GothamBlack,
 		TextSize = 18
 	}), "Text")
- 
+
 	local TopbarStats = Create("TextLabel", {
 		Name             = "TopbarStats",
 		Text             = "FPS: -- | Ping: --",
@@ -634,12 +633,12 @@ function OrionLib:MakeWindow(WindowConfig)
 		Position         = UDim2.new(0, 15, 0, 33),
 		TextXAlignment   = Enum.TextXAlignment.Left
 	})
- 
+
 	local WindowTopBarLine = AddThemeObject(SetProps(MakeElement("Frame"), {
 		Size     = UDim2.new(1, 0, 0, 1),
 		Position = UDim2.new(0, 0, 1, -1)
 	}), "Stroke")
- 
+
 	local MainWindow = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 10), {
 		Parent                = Orion,
 		Position              = UDim2.new(0.5, -307, 0.5, -172),
@@ -679,7 +678,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		}),
 		WindowStuff
 	}), "Main")
- 
+
 	if WindowConfig.ShowIcon then
 		WindowName.Position = UDim2.new(0, 50, 0, -24)
 		local WindowIcon = SetProps(MakeElement("Image", WindowConfig.Icon), {
@@ -688,22 +687,22 @@ function OrionLib:MakeWindow(WindowConfig)
 		})
 		WindowIcon.Parent = MainWindow.TopBar
 	end
- 
+
 	-- Black outline on main window edges
 	local MainStroke = Instance.new("UIStroke")
 	MainStroke.Color     = Color3.fromRGB(0, 0, 0)
 	MainStroke.Thickness = 5
 	MainStroke.Parent    = MainWindow
- 
+
 	AddDraggingFunctionality(DragPoint, MainWindow)
- 
+
 	-- get/create the persistent UIScale for animations
 	local function getUIScale()
 		local s = MainWindow:FindFirstChildOfClass("UIScale")
 		if not s then s = Instance.new("UIScale"); s.Parent = MainWindow end
 		return s
 	end
- 
+
 	-- -- Snow background animation ----------------------------------------
 	do
 		local SnowCanvas = Create("Frame", {
@@ -715,9 +714,9 @@ function OrionLib:MakeWindow(WindowConfig)
 			ClipsDescendants       = true,
 			Parent                 = MainWindow
 		})
- 
+
 		local MAX_FLAKES = 45
- 
+
 		-- each flake is a small rounded square, slightly varied in size
 		local function makeFlake()
 			local sz = 3 + math.random(0, 3)   -- 3-6 px, feels like snow not rain
@@ -733,7 +732,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = f})
 			return f, sz
 		end
- 
+
 		local function animateFlake(f, sz)
 			-- random starting position along top
 			local startX  = math.random() * 0.98
@@ -741,17 +740,17 @@ function OrionLib:MakeWindow(WindowConfig)
 			local fallTime = 4 + math.random() * 5
 			-- gentle horizontal sway offset (-20 to +20 px)
 			local sway     = (math.random() - 0.5) * 40
- 
+
 			f.BackgroundTransparency = 0.2 + math.random() * 0.5
 			f.Size     = UDim2.new(0, sz, 0, sz)
 			f.Position = UDim2.new(startX, 0, -0.04, 0)
- 
+
 			-- fall tween
 			TweenService:Create(f,
 				TweenInfo.new(fallTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In),
 				{Position = UDim2.new(startX, sway, 1.04, 0)}
 			):Play()
- 
+
 			-- fade out near bottom
 			local fadeDelay = fallTime * 0.75
 			task.delay(fadeDelay, function()
@@ -762,7 +761,7 @@ function OrionLib:MakeWindow(WindowConfig)
 					):Play()
 				end
 			end)
- 
+
 			-- reset when done
 			task.delay(fallTime + 0.1, function()
 				if f and f.Parent then
@@ -771,7 +770,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				end
 			end)
 		end
- 
+
 		-- stagger all flakes so the window feels naturally filled
 		task.spawn(function()
 			for i = 1, MAX_FLAKES do
@@ -785,7 +784,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			end
 		end)
 	end
- 
+
 	-- -- Topbar FPS/Ping live update --------------------------------------
 	do
 		local fpsBuffer = {}
@@ -805,7 +804,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			end
 		end)
 	end
- 
+
 	-- -- Cyan blink glow on avatar ----------------------------------------
 	task.spawn(function()
 		local glowStroke = nil
@@ -827,7 +826,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			task.wait(0.9)
 		end
 	end)
- 
+
 	-- -- Initial open animation (scale from 0 to 1 from center) -----------
 	do
 		MainWindow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -837,10 +836,10 @@ function OrionLib:MakeWindow(WindowConfig)
 		uiScale.Scale = 0
 		TweenService:Create(uiScale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
 	end
- 
+
 	-- -- Inline Settings Panel -----------------------------------------------
 	local SettingsPanelOpen = false
- 
+
 	-- Panel sits just below topbar, right-aligned
 	local SettingsPanel = SetChildren(SetProps(MakeElement("RoundFrame",
 		OrionLib.Themes[OrionLib.SelectedTheme].Main, 0, 8), {
@@ -854,7 +853,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		MakeElement("Padding", 6, 6, 6, 6),
 		MakeElement("List", 0, 2)
 	})
- 
+
 	local function MakeSettingBtn(text, cb)
 		local f = Create("Frame", {
 			BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Second,
@@ -900,12 +899,12 @@ function OrionLib:MakeWindow(WindowConfig)
 		end)
 		click.MouseButton1Click:Connect(function() spawn(cb) end)
 	end
- 
+
 	-- Settings helpers (need folder/flags)
 	local function SPGetFolder() return OrionLib.Folder or "OrionConfig" end
 	local function SPGetPath(n) return SPGetFolder().."/"..n..".json" end
 	local function SPEnsureFolder() pcall(function() if not isfolder(SPGetFolder()) then makefolder(SPGetFolder()) end end) end
- 
+
 	local function SPSave(name)
 		SPEnsureFolder()
 		local data={}
@@ -916,7 +915,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		local ok,err=pcall(writefile,SPGetPath(name),HttpService:JSONEncode(data))
 		OrionLib:MakeNotification({Name=ok and "Config Saved" or "Save Failed",Content=ok and "Saved '"..name.."'" or tostring(err),Time=4})
 	end
- 
+
 	local function SPLoad(name)
 		local ok,raw=pcall(readfile,SPGetPath(name))
 		if not ok or not raw or raw=="" then OrionLib:MakeNotification({Name="Load Failed",Content="No config: "..name,Time=4}) return end
@@ -930,10 +929,10 @@ function OrionLib:MakeWindow(WindowConfig)
 		end
 		OrionLib:MakeNotification({Name="Config Loaded",Content="Loaded '"..name.."'",Time=4})
 	end
- 
+
 	-- default config name comes from WindowConfig
 	local cfgName = (WindowConfig.ConfigFolder or "OrionConfig"):gsub("[^%w_]","_")
- 
+
 	-- -- Keybind row (top of panel) --------------------------------------
 	-- Shows current key, click to rebind
 	local kbRow = Create("Frame", {
@@ -944,7 +943,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		Parent           = SettingsPanel
 	})
 	Create("UICorner", {CornerRadius = UDim.new(0, 5), Parent = kbRow})
- 
+
 	local kbLabel = Create("TextLabel", {
 		Text             = "Toggle Key",
 		Font             = Enum.Font.GothamSemibold,
@@ -957,7 +956,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		ZIndex           = 52,
 		Parent           = kbRow
 	})
- 
+
 	local kbBox = Create("Frame", {
 		BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Main,
 		Size             = UDim2.new(0, 80, 0, 22),
@@ -968,7 +967,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	})
 	Create("UICorner",  {CornerRadius = UDim.new(0, 4), Parent = kbBox})
 	Create("UIStroke",  {Color = OrionLib.Themes[OrionLib.SelectedTheme].Stroke, Thickness = 1, Parent = kbBox})
- 
+
 	local kbText = Create("TextLabel", {
 		Text             = "RightShift",
 		Font             = Enum.Font.GothamBold,
@@ -981,14 +980,14 @@ function OrionLib:MakeWindow(WindowConfig)
 		ZIndex           = 53,
 		Parent           = kbBox
 	})
- 
+
 	-- Click anywhere on the row to start listening for new key
 	local kbListening = false
 	local kbClick = Create("TextButton", {
 		Text = "", BackgroundTransparency = 1,
 		Size = UDim2.new(1, 0, 1, 0), ZIndex = 54, Parent = kbRow
 	})
- 
+
 	kbClick.MouseButton1Click:Connect(function()
 		if kbListening then return end
 		kbListening = true
@@ -1013,7 +1012,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			})
 		end)
 	end)
- 
+
 	-- separator line between keybind and config buttons
 	Create("Frame", {
 		BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Stroke,
@@ -1022,7 +1021,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		ZIndex           = 51,
 		Parent           = SettingsPanel
 	})
- 
+
 	MakeSettingBtn("  Save Config",    function() SPSave(cfgName) end)
 	MakeSettingBtn("  Load Config",    function() SPLoad(cfgName) end)
 	MakeSettingBtn("  Export (Copy)",  function()
@@ -1045,7 +1044,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		OrionLib:MakeNotification({Name="Goodbye",Content="UI destroyed.",Time=2})
 		task.wait(2.2); OrionLib:Destroy()
 	end)
- 
+
 	-- Size panel to fit buttons, then hook up toggle
 	task.defer(function()
 		task.wait()
@@ -1054,7 +1053,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			SettingsPanel.Size = UDim2.new(0, 200, 0, ll.AbsoluteContentSize.Y + 12)
 		end
 	end)
- 
+
 	local function openSettingsPanel()
 		SettingsPanelOpen = true
 		-- recompute size each open in case of layout changes
@@ -1065,17 +1064,17 @@ function OrionLib:MakeWindow(WindowConfig)
 		SettingsPanel.Visible = true
 		TweenService:Create(SettingsBtn.Ico, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {Rotation = 90}):Play()
 	end
- 
+
 	local function closeSettingsPanel()
 		SettingsPanelOpen = false
 		SettingsPanel.Visible = false
 		TweenService:Create(SettingsBtn.Ico, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {Rotation = 0}):Play()
 	end
- 
+
 	AddConnection(SettingsBtn.MouseButton1Click, function()
 		if SettingsPanelOpen then closeSettingsPanel() else openSettingsPanel() end
 	end)
- 
+
 	-- close panel when clicking outside both the panel and the button
 	AddConnection(UserInputService.InputBegan, function(Input)
 		if not SettingsPanelOpen then return end
@@ -1093,7 +1092,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			closeSettingsPanel()
 		end
 	end)
- 
+
 	-- auto-load config on start
 	task.defer(function()
 		pcall(function()
@@ -1102,10 +1101,10 @@ function OrionLib:MakeWindow(WindowConfig)
 			end
 		end)
 	end)
- 
+
 	-- -- FPS / Ping live update ---------------------------------------------
- 
- 
+
+
 	-- -- Resizable UI -------------------------------------------------------
 	-- Drag the bottom-right corner to resize
 	local ResizeHandle = Create("TextButton", {
@@ -1134,11 +1133,11 @@ function OrionLib:MakeWindow(WindowConfig)
 			})
 		end
 	end
- 
+
 	local resizing = false
 	local resizeStart, resizeStartSize
 	local minW, minH = 400, 250
- 
+
 	AddConnection(ResizeHandle.InputBegan, function(Input)
 		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
 			resizing       = true
@@ -1161,10 +1160,10 @@ function OrionLib:MakeWindow(WindowConfig)
 			WindowStuff.Size = UDim2.new(0, 150, 1, -50)
 		end
 	end)
- 
+
 	-- -- Hide / Show UI ---------------------------------------------------
 	local toggleDebounce = false
- 
+
 	local function HideUI()
 		if toggleDebounce then return end
 		toggleDebounce = true
@@ -1177,7 +1176,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			toggleDebounce = false
 		end)
 	end
- 
+
 	local function ShowUI()
 		if toggleDebounce then return end
 		toggleDebounce = true
@@ -1190,7 +1189,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			toggleDebounce = false
 		end)
 	end
- 
+
 	AddConnection(CloseBtn.MouseButton1Up, function()
 		HideUI()
 		OrionLib:MakeNotification({
@@ -1200,7 +1199,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		})
 		WindowConfig.CloseCallback()
 	end)
- 
+
 	-- Use both InputBegan and a key-held poll to catch RightShift on all executors
 	UserInputService.InputBegan:Connect(function(Input)
 		if Input.KeyCode == ToggleKey then
@@ -1216,7 +1215,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		end
 		lastKeyState = pressed
 	end)
- 
+
 	AddConnection(MinimizeBtn.MouseButton1Up, function()
 		if Minimized then
 			TweenService:Create(MainWindow, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 615, 0, 344)}):Play()
@@ -1233,14 +1232,14 @@ function OrionLib:MakeWindow(WindowConfig)
 		end
 		Minimized = not Minimized
 	end)
- 
+
 	local TabFunction = {}
 	function TabFunction:MakeTab(TabConfig)
 		TabConfig = TabConfig or {}
 		TabConfig.Name       = TabConfig.Name       or "Tab"
 		TabConfig.Icon       = TabConfig.Icon       or ""
 		TabConfig.PremiumOnly = TabConfig.PremiumOnly or false
- 
+
 		-- Icon: single ASCII char displayed as styled text label (purple tint)
 		local iconChar = (TabConfig.Icon ~= "" and TabConfig.Icon) or "-"
 		local TabIconLbl = Create("TextLabel", {
@@ -1256,7 +1255,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			TextXAlignment   = Enum.TextXAlignment.Center,
 			Name             = "Ico"
 		})
- 
+
 		local TabFrame = SetChildren(SetProps(MakeElement("Button"), {
 			Size   = UDim2.new(1, 0, 0, 30),
 			Parent = TabHolder
@@ -1270,7 +1269,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				Name             = "Title"
 			}), "Text")
 		})
- 
+
 		local Container = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 5), {
 			Size             = UDim2.new(1, -150, 1, -50),
 			Position         = UDim2.new(0, 150, 0, 50),
@@ -1283,7 +1282,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			MakeElement("List", 0, 6),
 			MakeElement("Padding", 15, 10, 10, 15)
 		}), "Divider")
- 
+
 		AddConnection(Container.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
 			Container.CanvasSize = UDim2.new(0, 0, 0, Container.UIListLayout.AbsoluteContentSize.Y + 30)
 		end)
@@ -1291,7 +1290,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		task.defer(function()
 			Container.CanvasSize = UDim2.new(0, 0, 0, Container.UIListLayout.AbsoluteContentSize.Y + 30)
 		end)
- 
+
 		if FirstTab then
 			FirstTab = false
 			TabIconLbl.TextTransparency = 0
@@ -1301,7 +1300,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			end
 			Container.Visible = true
 		end
- 
+
 		-- Tab hover: smooth subtle grow
 		local _TabTitle = TabFrame:FindFirstChild("Title")
 		local _TabIco   = TabFrame:FindFirstChild("Ico")
@@ -1318,7 +1317,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				if _TabIco   then TweenService:Create(_TabIco,   smoothInfo, {TextSize = 15, TextTransparency = 0.2}):Play() end
 			end
 		end)
- 
+
 		AddConnection(TabFrame.MouseButton1Click, function()
 			-- deactivate all other tabs
 			for _, Tab in next, TabHolder:GetChildren() do
@@ -1369,16 +1368,16 @@ function OrionLib:MakeWindow(WindowConfig)
 							TweenService:Create(child, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
 								Position = UDim2.new(0, 0, child.Position.Y.Scale, child.Position.Y.Offset)
 							}):Play()
- 
+
 						end
 					end)
 				end
 			end)
 		end)
- 
+
 		local function GetElements(ItemParent)
 			local ElementFunction = {}
- 
+
 			function ElementFunction:AddLabel(Text)
 				local LabelFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 5), {
 					Size                = UDim2.new(1, 0, 0, 30),
@@ -1397,7 +1396,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				function LabelFunction:Set(ToChange) LabelFrame.Content.Text = ToChange end
 				return LabelFunction
 			end
- 
+
 			function ElementFunction:AddParagraph(Text, Content)
 				Text    = Text    or "Text"
 				Content = Content or "Content"
@@ -1430,7 +1429,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				function ParagraphFunction:Set(ToChange) ParagraphFrame.Content.Text = ToChange end
 				return ParagraphFunction
 			end
- 
+
 			function ElementFunction:AddButton(ButtonConfig)
 				ButtonConfig          = ButtonConfig or {}
 				ButtonConfig.Name     = ButtonConfig.Name     or "Button"
@@ -1478,7 +1477,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				function Button:Set(ButtonText) ButtonFrame.Content.Text = ButtonText end
 				return Button
 			end
- 
+
 			function ElementFunction:AddToggle(ToggleConfig)
 				ToggleConfig          = ToggleConfig or {}
 				ToggleConfig.Name     = ToggleConfig.Name     or "Toggle"
@@ -1534,7 +1533,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				if ToggleConfig.Flag then OrionLib.Flags[ToggleConfig.Flag] = Toggle end
 				return Toggle
 			end
- 
+
 			function ElementFunction:AddSlider(SliderConfig)
 				SliderConfig           = SliderConfig or {}
 				SliderConfig.Name      = SliderConfig.Name      or "Slider"
@@ -1610,7 +1609,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				if SliderConfig.Flag then OrionLib.Flags[SliderConfig.Flag] = Slider end
 				return Slider
 			end
- 
+
 			function ElementFunction:AddDropdown(DropdownConfig)
 				DropdownConfig          = DropdownConfig or {}
 				DropdownConfig.Name     = DropdownConfig.Name     or "Dropdown"
@@ -1693,7 +1692,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				if DropdownConfig.Flag then OrionLib.Flags[DropdownConfig.Flag] = Dropdown end
 				return Dropdown
 			end
- 
+
 			function ElementFunction:AddBind(BindConfig)
 				BindConfig          = BindConfig or {}
 				BindConfig.Name     = BindConfig.Name     or "Bind"
@@ -1748,7 +1747,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				if BindConfig.Flag then OrionLib.Flags[BindConfig.Flag] = Bind end
 				return Bind
 			end
- 
+
 			function ElementFunction:AddTextbox(TextboxConfig)
 				TextboxConfig              = TextboxConfig or {}
 				TextboxConfig.Name         = TextboxConfig.Name         or "Textbox"
@@ -1791,7 +1790,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				AddConnection(Click.MouseButton1Up,  function() TweenService:Create(TextboxFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+3)}):Play() TextboxActual:CaptureFocus() end)
 				AddConnection(Click.MouseButton1Down, function() TweenService:Create(TextboxFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+6,OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+6,OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+6)}):Play() end)
 			end
- 
+
 			function ElementFunction:AddColorpicker(ColorpickerConfig)
 				ColorpickerConfig          = ColorpickerConfig or {}
 				ColorpickerConfig.Name     = ColorpickerConfig.Name     or "Colorpicker"
@@ -1843,7 +1842,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				if ColorpickerConfig.Flag then OrionLib.Flags[ColorpickerConfig.Flag] = Colorpicker end
 				return Colorpicker
 			end
- 
+
 			-- -- AddDivider ---------------------------------------------------
 			function ElementFunction:AddDivider()
 				local DividerFrame = SetChildren(SetProps(MakeElement("TFrame"), {
@@ -1860,12 +1859,12 @@ function OrionLib:MakeWindow(WindowConfig)
 				function DividerFunction:Set(Visible) DividerFrame.Visible = Visible end
 				return DividerFunction
 			end
- 
+
 			return ElementFunction
 		end
- 
+
 		local ElementFunction = {}
- 
+
 		function ElementFunction:AddSection(SectionConfig)
 			SectionConfig = SectionConfig or {}
 			SectionConfig.Name = SectionConfig.Name or "Section"
@@ -1897,11 +1896,11 @@ function OrionLib:MakeWindow(WindowConfig)
 			end
 			return SectionFunction
 		end
- 
+
 		for i, v in next, GetElements(Container) do
 			ElementFunction[i] = v
 		end
- 
+
 		if TabConfig.PremiumOnly then
 			for i, v in next, ElementFunction do
 				ElementFunction[i] = function() end
@@ -1918,10 +1917,10 @@ function OrionLib:MakeWindow(WindowConfig)
 		end
 		return ElementFunction
 	end
- 
+
 	return TabFunction
 end
- 
+
 function OrionLib:Destroy()
 	-- smooth scale-out before destroy
 	for _, win in ipairs(Orion:GetDescendants()) do
@@ -1934,3 +1933,5 @@ function OrionLib:Destroy()
 	for _, c in next, OrionLib.Connections do pcall(function() c:Disconnect() end) end
 	Orion:Destroy()
 end
+
+return OrionLib
