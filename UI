@@ -486,7 +486,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		Position               = UDim2.new(0, 0, 0, 0),
 		BackgroundTransparency = 1
 	}), {
-		AddThemeObject(SetProps(MakeElement("Label", "⚙", 16), {
+		AddThemeObject(SetProps(MakeElement("Label", "*", 16), {
 			Size           = UDim2.new(1, 0, 1, 0),
 			Font           = Enum.Font.GothamBold,
 			TextXAlignment = Enum.TextXAlignment.Center,
@@ -730,9 +730,9 @@ function OrionLib:MakeWindow(WindowConfig)
 	-- default config name comes from WindowConfig
 	local cfgName = (WindowConfig.ConfigFolder or "OrionConfig"):gsub("[^%w_]","_")
 
-	MakeSettingBtn("💾  Save Config",    function() SPSave(cfgName) end)
-	MakeSettingBtn("📂  Load Config",    function() SPLoad(cfgName) end)
-	MakeSettingBtn("📋  Export (Copy)",  function()
+	MakeSettingBtn("  Save Config",    function() SPSave(cfgName) end)
+	MakeSettingBtn("  Load Config",    function() SPLoad(cfgName) end)
+	MakeSettingBtn("  Export (Copy)",  function()
 		local data={}
 		for flag,elem in pairs(OrionLib.Flags) do
 			if elem.Type=="Colorpicker" then data[flag]={R=elem.Value.R*255,G=elem.Value.G*255,B=elem.Value.B*255}
@@ -741,14 +741,14 @@ function OrionLib:MakeWindow(WindowConfig)
 		pcall(setclipboard,HttpService:JSONEncode(data))
 		OrionLib:MakeNotification({Name="Exported",Content="Config copied to clipboard.",Time=4})
 	end)
-	MakeSettingBtn("🔄  Reset All",      function()
+	MakeSettingBtn("  Reset All",      function()
 		for _,elem in pairs(OrionLib.Flags) do
 			if elem.Type=="Toggle" then pcall(function() elem:Set(false) end)
 			elseif elem.Type=="Colorpicker" then pcall(function() elem:Set(Color3.fromRGB(255,255,255)) end) end
 		end
 		OrionLib:MakeNotification({Name="Reset",Content="All settings reset.",Time=4})
 	end)
-	MakeSettingBtn("💥  Destroy UI",     function()
+	MakeSettingBtn("  Destroy UI",     function()
 		OrionLib:MakeNotification({Name="Goodbye",Content="UI destroyed.",Time=2})
 		task.wait(2.2); OrionLib:Destroy()
 	end)
