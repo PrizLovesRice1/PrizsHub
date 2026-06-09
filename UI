@@ -5,7 +5,7 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local HttpService = game:GetService("HttpService")
 
--- ── Executor Detection ──────────────────────────────────────────────────────
+-- -- Executor Detection ------------------------------------------------------
 local function GetExecutor()
 	if identifyexecutor then
 		local ok, name = pcall(identifyexecutor)
@@ -480,7 +480,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		TabHolder.CanvasSize = UDim2.new(0, 0, 0, TabHolder.UIListLayout.AbsoluteContentSize.Y + 16)
 	end)
 
-	-- Settings button (⚙) — opens inline settings panel
+	-- Settings button (-) - opens inline settings panel
 	local SettingsBtn = SetChildren(SetProps(MakeElement("Button"), {
 		Size                   = UDim2.new(0, 35, 1, 0),
 		Position               = UDim2.new(0, 0, 0, 0),
@@ -615,7 +615,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		}), {
 			WindowName,
 			WindowTopBarLine,
-			DragPoint,   -- ← inside TopBar, not at window level
+			DragPoint,   -- - inside TopBar, not at window level
 			AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 7), {
 				Size     = UDim2.new(0, 105, 0, 30),
 				Position = UDim2.new(1, -120, 0, 10)
@@ -650,7 +650,20 @@ function OrionLib:MakeWindow(WindowConfig)
 
 	AddDraggingFunctionality(DragPoint, MainWindow)
 
-	-- ── Inline Settings Panel (opened by ⚙ button) ────────────────────────
+	-- -- Initial open animation (scale from 0 - 1 from center) ------------
+	do
+		MainWindow.AnchorPoint = Vector2.new(0.5, 0.5)
+		MainWindow.Position    = UDim2.new(0.5, 0, 0.5, 0)
+		local UIScale          = Instance.new("UIScale")
+		UIScale.Scale          = 0
+		UIScale.Parent         = MainWindow
+		MainWindow.BackgroundTransparency = 1
+		MainWindow.Visible     = true
+		TweenService:Create(UIScale,    TweenInfo.new(0.45, Enum.EasingStyle.Back,  Enum.EasingDirection.Out), {Scale = 1}):Play()
+		TweenService:Create(MainWindow, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+	end
+
+	-- -- Inline Settings Panel (opened by * button) ------------------------
 	local SettingsPanelOpen = false
 
 	local SettingsPanel = SetChildren(SetProps(MakeElement("RoundFrame",
@@ -792,7 +805,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		end)
 	end)
 
-	-- ── FPS / Ping live update ─────────────────────────────────────────────
+	-- -- FPS / Ping live update ---------------------------------------------
 	local fpsBuffer = {}
 	AddConnection(RunService.RenderStepped, function(dt)
 		table.insert(fpsBuffer, dt)
@@ -807,7 +820,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		end
 	end)
 
-	-- ── Resizable UI ───────────────────────────────────────────────────────
+	-- -- Resizable UI -------------------------------------------------------
 	-- Drag the bottom-right corner to resize
 	local ResizeHandle = Create("TextButton", {
 		Text                = "",
@@ -863,7 +876,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		end
 	end)
 
-	-- ── Close with smooth scale-out tween ─────────────────────────────────
+	-- -- Close with smooth scale-out tween ---------------------------------
 	local function CloseUI()
 		UIHidden = true
 		local uiScale = MainWindow:FindFirstChildWhichIsA("UIScale")
@@ -935,8 +948,8 @@ function OrionLib:MakeWindow(WindowConfig)
 		TabConfig.Icon       = TabConfig.Icon       or ""
 		TabConfig.PremiumOnly = TabConfig.PremiumOnly or false
 
-		-- Icon as a text symbol (no broken ImageLabel — symbol set via TabConfig.Icon string)
-		local TabIconLbl = AddThemeObject(SetProps(MakeElement("Label", TabConfig.Icon ~= "" and TabConfig.Icon or "•", 16), {
+		-- Icon as a text symbol (no broken ImageLabel - symbol set via TabConfig.Icon string)
+		local TabIconLbl = AddThemeObject(SetProps(MakeElement("Label", TabConfig.Icon ~= "" and TabConfig.Icon or "-", 16), {
 			AnchorPoint      = Vector2.new(0, 0.5),
 			Size             = UDim2.new(0, 22, 0, 22),
 			Position         = UDim2.new(0, 8, 0.5, 0),
@@ -1494,7 +1507,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				return Colorpicker
 			end
 
-			-- ── AddDivider ───────────────────────────────────────────────────
+			-- -- AddDivider ---------------------------------------------------
 			function ElementFunction:AddDivider()
 				local DividerFrame = SetChildren(SetProps(MakeElement("TFrame"), {
 					Size   = UDim2.new(1, 0, 0, 16),
@@ -1596,7 +1609,7 @@ return OrionLib.Folder or "OrionConfig"
 		end)
 	end
 
-	-- ── Save config ───────────────────────────────────────────────────────
+	-- -- Save config -------------------------------------------------------
 	local function DoSave(name)
 		ensureFolder()
 		local data = {}
@@ -1615,7 +1628,7 @@ return OrionLib.Folder or "OrionConfig"
 		end
 	end
 
-	-- ── Load config ───────────────────────────────────────────────────────
+	-- -- Load config -------------------------------------------------------
 	local function DoLoad(name)
 		local ok, raw = pcall(readfile, getPath(name))
 		if not ok or not raw or raw == "" then
@@ -1641,7 +1654,7 @@ return OrionLib.Folder or "OrionConfig"
 		OrionLib:MakeNotification({ Name = "Config Loaded", Content = "Loaded '" .. (name or SettingsConfig.ConfigName) .. "'", Time = 4 })
 	end
 
-	-- ── Auto-load on start ────────────────────────────────────────────────
+	-- -- Auto-load on start ------------------------------------------------
 	task.defer(function()
 		pcall(function()
 			if isfile and isfile(getPath(SettingsConfig.ConfigName)) then
