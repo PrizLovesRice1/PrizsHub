@@ -29,12 +29,12 @@ local OrionLib = {
 	Flags = {},
 	Themes = {
 		Default = {
-			Main    = Color3.fromRGB(12, 4, 24),
-			Second  = Color3.fromRGB(22, 8, 42),
-			Stroke  = Color3.fromRGB(90, 30, 140),
-			Divider = Color3.fromRGB(90, 30, 140),
-			Text    = Color3.fromRGB(240, 215, 255),
-			TextDark = Color3.fromRGB(160, 100, 210)
+			Main    = Color3.fromRGB(10, 4, 20),
+			Second  = Color3.fromRGB(20, 8, 36),
+			Stroke  = Color3.fromRGB(60, 20, 100),
+			Divider = Color3.fromRGB(60, 20, 100),
+			Text    = Color3.fromRGB(235, 210, 255),
+			TextDark = Color3.fromRGB(140, 90, 190)
 		}
 	},
 	SelectedTheme = "Default",
@@ -291,7 +291,7 @@ CreateElement("Padding", function(Bottom, Left, Right, Top)
 end)
 
 CreateElement("TFrame", function()
-	return Create("Frame", {BackgroundTransparency = 0})
+	return Create("Frame", {BackgroundTransparency = 0.18})
 end)
 
 CreateElement("Frame", function(Color)
@@ -557,7 +557,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 10), {
 		Size                  = UDim2.new(0, 150, 1, -50),
 		Position              = UDim2.new(0, 0, 0, 50),
-		BackgroundTransparency = 0
+		BackgroundTransparency = 0.55
 	}), {
 		AddThemeObject(SetProps(MakeElement("Frame"), {
 			Size     = UDim2.new(1, 0, 0, 10),
@@ -643,8 +643,8 @@ function OrionLib:MakeWindow(WindowConfig)
 		Parent                = Orion,
 		Position              = UDim2.new(0.5, -307, 0.5, -172),
 		Size                  = UDim2.new(0, 615, 0, 344),
-		ClipsDescendants      = true,
-		BackgroundTransparency = 0
+		ClipsDescendants      = false,
+		BackgroundTransparency = 1
 	}), {
 		-- TopBar contains DragPoint so it can never overlap the content area
 		SetChildren(SetProps(MakeElement("TFrame"), {
@@ -844,10 +844,10 @@ function OrionLib:MakeWindow(WindowConfig)
 	local SettingsPanel = SetChildren(SetProps(MakeElement("RoundFrame",
 		OrionLib.Themes[OrionLib.SelectedTheme].Main, 0, 8), {
 		Size     = UDim2.new(0, 200, 0, 8),
-		Position = UDim2.new(0, 0, 0, 0),
-		ZIndex   = 100,
+		Position = UDim2.new(1, -210, 0, 52),
+		ZIndex   = 50,
 		Visible  = false,
-		Parent   = Orion
+		Parent   = MainWindow
 	}), {
 		AddThemeObject(MakeElement("Stroke"), "Stroke"),
 		MakeElement("Padding", 6, 6, 6, 6),
@@ -1056,13 +1056,11 @@ function OrionLib:MakeWindow(WindowConfig)
 
 	local function openSettingsPanel()
 		SettingsPanelOpen = true
+		-- recompute size each open in case of layout changes
 		local ll = SettingsPanel:FindFirstChild("UIListLayout")
-		local h = ll and ll.AbsoluteContentSize.Y + 12 or 200
-		-- position below the gear button in screen coords
-		local btnPos = SettingsBtn.AbsolutePosition
-		local winPos = MainWindow.AbsolutePosition
-		SettingsPanel.Position = UDim2.new(0, btnPos.X - 100, 0, btnPos.Y + 34)
-		SettingsPanel.Size = UDim2.new(0, 200, 0, h)
+		if ll then
+			SettingsPanel.Size = UDim2.new(0, 200, 0, ll.AbsoluteContentSize.Y + 12)
+		end
 		SettingsPanel.Visible = true
 		TweenService:Create(SettingsBtn.Ico, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {Rotation = 90}):Play()
 	end
@@ -1127,7 +1125,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	for r = 0, 1 do
 		for c = 0, 1 do
 			Create("Frame", {
-				BackgroundColor3 = Color3.fromRGB(90, 30, 140),
+				BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Stroke,
 				Size             = UDim2.new(0, 3, 0, 3),
 				Position         = UDim2.new(0, 2 + c * 6, 0, 2 + r * 6),
 				BorderSizePixel  = 0,
@@ -1935,5 +1933,3 @@ function OrionLib:Destroy()
 	for _, c in next, OrionLib.Connections do pcall(function() c:Disconnect() end) end
 	Orion:Destroy()
 end
-
-return OrionLib
