@@ -291,7 +291,7 @@ CreateElement("Padding", function(Bottom, Left, Right, Top)
 end)
 
 CreateElement("TFrame", function()
-	return Create("Frame", {BackgroundTransparency = 0.18})
+	return Create("Frame", {BackgroundTransparency = 1})
 end)
 
 CreateElement("Frame", function(Color)
@@ -557,7 +557,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	local WindowStuff = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 10), {
 		Size                  = UDim2.new(0, 150, 1, -50),
 		Position              = UDim2.new(0, 0, 0, 50),
-		BackgroundTransparency = 0.55
+		BackgroundTransparency = 0
 	}), {
 		AddThemeObject(SetProps(MakeElement("Frame"), {
 			Size     = UDim2.new(1, 0, 0, 10),
@@ -643,8 +643,8 @@ function OrionLib:MakeWindow(WindowConfig)
 		Parent                = Orion,
 		Position              = UDim2.new(0.5, -307, 0.5, -172),
 		Size                  = UDim2.new(0, 615, 0, 344),
-		ClipsDescendants      = false,
-		BackgroundTransparency = 1
+		ClipsDescendants      = true,
+		BackgroundTransparency = 0
 	}), {
 		-- TopBar contains DragPoint so it can never overlap the content area
 		SetChildren(SetProps(MakeElement("TFrame"), {
