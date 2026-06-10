@@ -2218,15 +2218,18 @@ function OrionLib:MakeWindow(WindowConfig)
 				Name     = "SectionLabel"
 			}), "Text")
 
+			local _hScale  = SectionConfig.Collapsible and 0 or 1
+			local _hOffset = SectionConfig.Collapsible and 0 or -24
+			local _hPad    = SectionConfig.Collapsible and 20 or 0
 			local HolderFrame = SetChildren(SetProps(MakeElement("TFrame"), {
 				AnchorPoint      = Vector2.new(0, 0),
-				Size             = UDim2.new(1, 0, SectionConfig.Collapsible and 0 or 1, SectionConfig.Collapsible and 0 or -24),
+				Size             = UDim2.new(1, 0, _hScale, _hOffset),
 				Position         = UDim2.new(0, 0, 0, 32),
 				Name             = "Holder",
 				ClipsDescendants = SectionConfig.Collapsible
 			}), {
 				MakeElement("List", 0, 6),
-				MakeElement("Padding", SectionConfig.Collapsible and 20 or 0, 0, 0, 0)
+				MakeElement("Padding", _hPad, 0, 0, 0)
 			})
 
 			local children = { SectionLabel, HolderFrame }
