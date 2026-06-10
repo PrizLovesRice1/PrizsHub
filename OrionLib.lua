@@ -475,6 +475,8 @@ function OrionLib:MakeWindow(WindowConfig)
 		MakeElement("Padding", 8, 0, 0, 8)
 	}), "Divider")
 
+
+
 	AddConnection(TabHolder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
 		TabHolder.CanvasSize = UDim2.new(0, 0, 0, TabHolder.UIListLayout.AbsoluteContentSize.Y + 16)
 	end)
@@ -501,15 +503,15 @@ function OrionLib:MakeWindow(WindowConfig)
 		Parent           = PillBadge
 	})
 
-	-- Settings button - clean gear icon using Roblox image
+	-- Settings button - gear symbol via rbxassetid known settings icon
 	local SettingsBtn = SetChildren(SetProps(MakeElement("Button"), {
 		Size                   = UDim2.new(0, 35, 1, 0),
 		Position               = UDim2.new(0, 0, 0, 0),
 		BackgroundTransparency = 1
 	}), {
-		AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://7072706816"), {
-			Size           = UDim2.new(0, 16, 0, 16),
-			Position       = UDim2.new(0.5, -8, 0.5, -8),
+		AddThemeObject(SetProps(MakeElement("Image", "rbxassetid://6031075938"), {
+			Size           = UDim2.new(0, 18, 0, 18),
+			Position       = UDim2.new(0.5, -9, 0.5, -9),
 			Name           = "Ico"
 		}), "Text")
 	})
@@ -579,11 +581,14 @@ function OrionLib:MakeWindow(WindowConfig)
 			AddThemeObject(SetProps(MakeElement("Frame"), {
 				Size = UDim2.new(1, 0, 0, 1)
 			}), "Stroke"),
-			AddThemeObject(SetChildren(SetProps(MakeElement("Frame"), {
+			AddThemeObject(SetChildren(SetProps(Create("TextButton", {
+				Text = "", BackgroundTransparency = 0, AutoButtonColor = false,
 				AnchorPoint = Vector2.new(0, 0.5),
 				Size        = UDim2.new(0, 32, 0, 32),
-				Position    = UDim2.new(0, 10, 0.5, 0)
-			}), {
+				Position    = UDim2.new(0, 10, 0.5, 0),
+				BorderSizePixel = 0,
+				Name = "AvatarBtn"
+			}), {}), {
 				SetProps(MakeElement("Image", "https://www.roblox.com/headshot-thumbnail/image?userId=" .. LocalPlayer.UserId .. "&width=420&height=420&format=png"), {
 					Size = UDim2.new(1, 0, 1, 0)
 				}),
@@ -696,6 +701,39 @@ function OrionLib:MakeWindow(WindowConfig)
 
 	AddDraggingFunctionality(DragPoint, MainWindow)
 
+	-- Simple pill line below the window, parented to ScreenGui (not inside UI)
+	local BottomPill = Create("Frame", {
+		BackgroundColor3       = Color3.fromRGB(180, 80, 255),
+		BackgroundTransparency = 0.3,
+		BorderSizePixel        = 0,
+		Size                   = UDim2.new(0, 180, 0, 4),
+		AnchorPoint            = Vector2.new(0.5, 0),
+		Position               = UDim2.new(0, 0, 0, 0),
+		ZIndex                 = 20,
+		Parent                 = Orion
+	})
+	Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = BottomPill})
+
+	-- keep it centered below the window as it moves
+	RunService.RenderStepped:Connect(function()
+		if MainWindow and MainWindow.Parent then
+			local wp = MainWindow.AbsolutePosition
+			local ws = MainWindow.AbsoluteSize
+			BottomPill.Position = UDim2.new(0, wp.X + ws.X / 2, 0, wp.Y + ws.Y + 8)
+		end
+	end)
+
+	-- hover brighten + expand
+	BottomPill.MouseEnter:Connect(function()
+		TweenService:Create(BottomPill, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {BackgroundTransparency = 0, BackgroundColor3 = Color3.fromRGB(210, 100, 255)}):Play()
+	end)
+	BottomPill.MouseLeave:Connect(function()
+		TweenService:Create(BottomPill, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {BackgroundTransparency = 0.3, BackgroundColor3 = Color3.fromRGB(180, 80, 255)}):Play()
+	end)
+
+	-- drag the window from the pill
+	AddDraggingFunctionality(BottomPill, MainWindow)
+
 	-- get/create the persistent UIScale for animations
 	local function getUIScale()
 		local s = MainWindow:FindFirstChildOfClass("UIScale")
@@ -785,6 +823,247 @@ function OrionLib:MakeWindow(WindowConfig)
 		end)
 	end
 
+	-- -- 3D Avatar Viewport (shows when avatar pic is clicked) ---------------
+	local ViewportOpen = false
+
+	local ViewportFrame = Create("Frame", {
+		Name                   = "AvatarViewport",
+		BackgroundColor3       = Color3.fromRGB(12, 4, 24),
+		BackgroundTransparency = 0.05,
+		BorderSizePixel        = 0,
+		Size                   = UDim2.new(0, 175, 0, 344),
+		Position               = UDim2.new(0, 0, 0, 0),
+		Visible                = false,
+		ZIndex                 = 100,
+		Parent                 = Orion
+	})
+	Create("UICorner", {CornerRadius = UDim.new(0, 12), Parent = ViewportFrame})
+	Create("UIStroke", {Color = Color3.fromRGB(90, 30, 140), Thickness = 1.5, Parent = ViewportFrame})
+
+	-- Full body avatar image (top half of panel)
+	Create("ImageLabel", {
+		Image                  = "https://www.roblox.com/avatar-thumbnail/image?userId=" .. LocalPlayer.UserId .. "&width=420&height=420&format=png&thumbnailType=AvatarThumbnail",
+		BackgroundTransparency = 1,
+		Size                   = UDim2.new(1, 0, 0, 145),
+		Position               = UDim2.new(0, 0, 0, 20),
+		ScaleType              = Enum.ScaleType.Fit,
+		ZIndex                 = 101,
+		Parent                 = ViewportFrame
+	})
+
+	local function loadViewportChar() end
+
+	-- Divider line
+	Create("Frame", {
+		BackgroundColor3       = Color3.fromRGB(80, 25, 130),
+		BorderSizePixel        = 0,
+		Size                   = UDim2.new(0.9, 0, 0, 1),
+		Position               = UDim2.new(0.05, 0, 0, 170),
+		ZIndex                 = 102,
+		Parent                 = ViewportFrame
+	})
+
+	-- Info rows helper
+	local function InfoRow(label, value, yPos)
+		Create("TextLabel", {
+			Text             = label,
+			Font             = Enum.Font.GothamBold,
+			TextSize         = 10,
+			TextColor3       = Color3.fromRGB(140, 90, 200),
+			BackgroundTransparency = 1,
+			Size             = UDim2.new(0.45, 0, 0, 16),
+			Position         = UDim2.new(0, 8, 0, yPos),
+			TextXAlignment   = Enum.TextXAlignment.Left,
+			ZIndex           = 103,
+			Parent           = ViewportFrame
+		})
+		local valLbl = Create("TextLabel", {
+			Text             = tostring(value),
+			Font             = Enum.Font.Gotham,
+			TextSize         = 10,
+			TextColor3       = Color3.fromRGB(220, 190, 255),
+			BackgroundTransparency = 1,
+			Size             = UDim2.new(0.55, -4, 0, 16),
+			Position         = UDim2.new(0.45, 0, 0, yPos),
+			TextXAlignment   = Enum.TextXAlignment.Left,
+			ZIndex           = 103,
+			TextTruncate     = Enum.TextTruncate.AtEnd,
+			Parent           = ViewportFrame
+		})
+		return valLbl
+	end
+
+	local yStart = 178
+
+	-- Display name + username
+	InfoRow("Display", LocalPlayer.DisplayName, yStart)
+	InfoRow("Username", "@" .. LocalPlayer.Name, yStart + 18)
+	InfoRow("User ID", LocalPlayer.UserId, yStart + 36)
+	InfoRow("Account Age", LocalPlayer.AccountAge .. "d", yStart + 54)
+	InfoRow("Executor", GetExecutor(), yStart + 72)
+
+	-- Ping (live update)
+	local pingRow = InfoRow("Ping", "--ms", yStart + 90)
+	local fpsRow  = InfoRow("FPS", "--", yStart + 108)
+	local gameRow = InfoRow("Game ID", game.GameId, yStart + 126)
+	local placeRow = InfoRow("Place ID", game.PlaceId, yStart + 144)
+
+	-- Update ping+fps live
+	RunService.RenderStepped:Connect(function(dt)
+		if ViewportFrame.Visible then
+			pcall(function()
+				pingRow.Text = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()) .. "ms"
+			end)
+			fpsRow.Text = math.floor(1/dt) .. " fps"
+		end
+	end)
+
+
+
+-- avatar shown via ImageLabel thumbnail
+
+	-- Rotate character in viewport
+
+
+	-- Track which side panel is on and follow MainWindow when it moves
+	local vpSide     = "right"  -- "left" or "right"
+	local vpDragging = false    -- declared here so RenderStepped can read it
+
+	local function resetViewportPos()
+		local wp  = MainWindow.AbsolutePosition
+		local ws  = MainWindow.AbsoluteSize
+		local vpH = ViewportFrame.AbsoluteSize.Y
+		vpSide = "right"
+		-- center vertically on the UI
+		ViewportFrame.Position = UDim2.new(0, wp.X + ws.X + 20, 0, wp.Y + (ws.Y - vpH) / 2)
+	end
+
+	-- Smoothly follow MainWindow using lerp
+	RunService.RenderStepped:Connect(function()
+		if ViewportFrame.Visible and not vpDragging then
+			local wp  = MainWindow.AbsolutePosition
+			local ws  = MainWindow.AbsoluteSize
+			local vpw = ViewportFrame.AbsoluteSize.X
+			local vpH     = ViewportFrame.AbsoluteSize.Y
+			local targetX = vpSide == "right" and (wp.X + ws.X + 20) or (wp.X - vpw - 20)
+			local targetY = wp.Y + (ws.Y - vpH) / 2
+			local curX = ViewportFrame.Position.X.Offset
+			local curY = ViewportFrame.Position.Y.Offset
+			-- smooth lerp toward target
+			local newX = curX + (targetX - curX) * 0.12
+			local newY = curY + (targetY - curY) * 0.12
+			ViewportFrame.Position = UDim2.new(0, newX, 0, newY)
+		end
+	end)
+
+	-- Toggle on avatar click
+	-- Single persistent UIScale for viewport animation
+	local VPScale = Instance.new("UIScale")
+	VPScale.Scale  = 1
+	VPScale.Parent = ViewportFrame  -- kept at 1, animation uses position instead
+
+	local function openViewport()
+		ViewportOpen = true
+		loadViewportChar()
+		resetViewportPos()
+		-- slide in from right side off screen
+		local wp  = MainWindow.AbsolutePosition
+		local ws  = MainWindow.AbsoluteSize
+		local vpH = ViewportFrame.AbsoluteSize.Y
+		local centY = wp.Y + (ws.Y - vpH) / 2
+		ViewportFrame.Position = UDim2.new(0, wp.X + ws.X + 80, 0, centY)
+		ViewportFrame.BackgroundTransparency = 1
+		ViewportFrame.Visible = true
+		VPScale.Scale = 1
+		TweenService:Create(ViewportFrame,
+			TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+			{Position = UDim2.new(0, wp.X + ws.X + 20, 0, centY), BackgroundTransparency = 0.05}
+		):Play()
+	end
+
+	local function closeViewport()
+		ViewportOpen = false
+		local curX = ViewportFrame.Position.X.Offset
+		local curY = ViewportFrame.Position.Y.Offset
+		local wp   = MainWindow.AbsolutePosition
+		local ws   = MainWindow.AbsoluteSize
+		-- always exit toward the side it is on
+		local exitX = vpSide == "left" and (wp.X - ViewportFrame.AbsoluteSize.X - 80) or (wp.X + ws.X + 80)
+		TweenService:Create(ViewportFrame,
+			TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
+			{Position = UDim2.new(0, exitX, 0, curY), BackgroundTransparency = 1}
+		):Play()
+		task.delay(0.38, function() ViewportFrame.Visible = false end)
+	end
+
+	local AvatarBtn = MainWindow:FindFirstChild("AvatarBtn", true)
+	if AvatarBtn then
+		AvatarBtn.MouseButton1Click:Connect(function()
+			if ViewportOpen then closeViewport() else openViewport() end
+		end)
+	end
+
+
+
+	-- Hide viewport when UI hides
+	-- Drag with magnet snap: releases to left or right side of MainWindow
+	local VPDragBtn = Create("TextButton", {
+		Text                = "",
+		BackgroundTransparency = 1,
+		Size                = UDim2.new(1, -30, 0, 20),
+		Position            = UDim2.new(0, 0, 0, 0),
+		ZIndex              = 110,
+		Parent              = ViewportFrame
+	})
+
+	local vpDragStart, vpFrameStart = nil, nil
+
+	VPDragBtn.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			vpDragging   = true
+			vpDragStart  = Vector2.new(input.Position.X, input.Position.Y)
+			vpFrameStart = Vector2.new(ViewportFrame.Position.X.Offset, ViewportFrame.Position.Y.Offset)
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if vpDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = Vector2.new(input.Position.X, input.Position.Y) - vpDragStart
+			ViewportFrame.Position = UDim2.new(0, vpFrameStart.X + delta.X, 0, vpFrameStart.Y + delta.Y)
+		end
+	end)
+
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 and vpDragging then
+			vpDragging = false
+			-- magnet snap: find closest side of MainWindow
+			local wp  = MainWindow.AbsolutePosition
+			local ws  = MainWindow.AbsoluteSize
+			local vpw = ViewportFrame.AbsoluteSize.X
+			local vpX = ViewportFrame.Position.X.Offset
+			local vpY = ViewportFrame.Position.Y.Offset
+
+			-- magnet snap left or right, vertically centered on UI
+			local vpH    = ViewportFrame.AbsoluteSize.Y
+			local snapY  = wp.Y + (ws.Y - vpH) / 2
+			local leftX  = wp.X - vpw - 20
+			local rightX = wp.X + ws.X + 20
+			if math.abs(vpX - leftX) < math.abs(vpX - rightX) then
+				vpSide = "left"
+				TweenService:Create(ViewportFrame,
+					TweenInfo.new(0.65, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+					{Position = UDim2.new(0, leftX, 0, snapY)}
+				):Play()
+			else
+				vpSide = "right"
+				TweenService:Create(ViewportFrame,
+					TweenInfo.new(0.65, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+					{Position = UDim2.new(0, rightX, 0, snapY)}
+				):Play()
+			end
+		end
+	end)
+
 	-- -- Topbar FPS/Ping live update --------------------------------------
 	do
 		local fpsBuffer = {}
@@ -843,11 +1122,12 @@ function OrionLib:MakeWindow(WindowConfig)
 	-- Panel sits just below topbar, right-aligned
 	local SettingsPanel = SetChildren(SetProps(MakeElement("RoundFrame",
 		OrionLib.Themes[OrionLib.SelectedTheme].Main, 0, 8), {
-		Size     = UDim2.new(0, 200, 0, 8),
-		Position = UDim2.new(1, -210, 0, 52),
-		ZIndex   = 50,
-		Visible  = false,
-		Parent   = MainWindow
+		Size             = UDim2.new(0, 200, 0, 0),
+		Position         = UDim2.new(1, -210, 0, 52),
+		ZIndex           = 50,
+		Visible          = false,
+		ClipsDescendants = true,
+		Parent           = Orion
 	}), {
 		AddThemeObject(MakeElement("Stroke"), "Stroke"),
 		MakeElement("Padding", 6, 6, 6, 6),
@@ -1056,19 +1336,31 @@ function OrionLib:MakeWindow(WindowConfig)
 
 	local function openSettingsPanel()
 		SettingsPanelOpen = true
-		-- recompute size each open in case of layout changes
 		local ll = SettingsPanel:FindFirstChild("UIListLayout")
-		if ll then
-			SettingsPanel.Size = UDim2.new(0, 200, 0, ll.AbsoluteContentSize.Y + 12)
-		end
-		SettingsPanel.Visible = true
+		local fullH = ll and ll.AbsoluteContentSize.Y + 12 or 200
+		-- position below gear button using screen coords
+		local bp = SettingsBtn.AbsolutePosition
+		local bs = SettingsBtn.AbsoluteSize
+		SettingsPanel.Position = UDim2.new(0, bp.X - 165, 0, bp.Y + bs.Y + 4)
+		SettingsPanel.Size     = UDim2.new(0, 200, 0, 0)
+		SettingsPanel.Visible  = true
+		TweenService:Create(SettingsPanel,
+			TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+			{Size = UDim2.new(0, 200, 0, fullH)}
+		):Play()
 		TweenService:Create(SettingsBtn.Ico, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {Rotation = 90}):Play()
 	end
 
 	local function closeSettingsPanel()
 		SettingsPanelOpen = false
-		SettingsPanel.Visible = false
+		TweenService:Create(SettingsPanel,
+			TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+			{Size = UDim2.new(0, 200, 0, 0)}
+		):Play()
 		TweenService:Create(SettingsBtn.Ico, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {Rotation = 0}):Play()
+		task.delay(0.22, function()
+			SettingsPanel.Visible = false
+		end)
 	end
 
 	AddConnection(SettingsBtn.MouseButton1Click, function()
@@ -1106,57 +1398,77 @@ function OrionLib:MakeWindow(WindowConfig)
 
 
 	-- -- Resizable UI -------------------------------------------------------
-	-- Drag the bottom-right corner to resize
-	local ResizeHandle = Create("TextButton", {
-		Text                = "",
+	-- Resize arc: circle with UIStroke, clipped to show only bottom-right quarter
+	local ResizeArcClip = Create("Frame", {
 		BackgroundTransparency = 1,
-		Size                = UDim2.new(0, 16, 0, 16),
-		Position            = UDim2.new(1, -16, 1, -16),
-		ZIndex              = 10,
-		AutoButtonColor     = false,
-		Parent              = MainWindow
+		ClipsDescendants       = true,
+		Size                   = UDim2.new(0, 40, 0, 40),
+		Position               = UDim2.new(0, 0, 0, 0),
+		ZIndex                 = 20,
+		Parent                 = Orion
 	})
-	-- small visual grip dots
-	local GripDots = Create("Frame", {
+	-- full circle, offset so only bottom-right quarter shows through the clip
+	local ResizeArc = Create("Frame", {
 		BackgroundTransparency = 1,
-		Size                   = UDim2.new(1, 0, 1, 0),
-		Parent                 = ResizeHandle
+		Size                   = UDim2.new(0, 80, 0, 80),
+		Position               = UDim2.new(0, -40, 0, -40),
+		ZIndex                 = 21,
+		Parent                 = ResizeArcClip
 	})
-	for r = 0, 1 do
-		for c = 0, 1 do
-			Create("Frame", {
-				BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Stroke,
-				Size             = UDim2.new(0, 3, 0, 3),
-				Position         = UDim2.new(0, 2 + c * 6, 0, 2 + r * 6),
-				BorderSizePixel  = 0,
-				Parent           = GripDots
-			})
-		end
-	end
+	Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = ResizeArc})
+	local ArcStroke = Create("UIStroke", {
+		Color        = Color3.fromRGB(180, 80, 255),
+		Thickness    = 4,
+		Transparency = 0.3,
+		Parent       = ResizeArc
+	})
 
+	-- invisible button over the clip area for interaction
+	local RCBtn = Create("TextButton", {
+		Text = "", BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 1, 0), ZIndex = 22, Parent = ResizeArcClip
+	})
+
+	-- keep anchored just outside bottom-right corner of window
+	RunService.RenderStepped:Connect(function()
+		if MainWindow and MainWindow.Parent then
+			local wp = MainWindow.AbsolutePosition
+			local ws = MainWindow.AbsoluteSize
+			ResizeArcClip.Position = UDim2.new(0, wp.X + ws.X - 22, 0, wp.Y + ws.Y - 22)
+		end
+	end)
+
+	-- hover highlight
+	RCBtn.MouseEnter:Connect(function()
+		TweenService:Create(ArcStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {Transparency = 0, Color = Color3.fromRGB(210, 100, 255)}):Play()
+	end)
+	RCBtn.MouseLeave:Connect(function()
+		TweenService:Create(ArcStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quint), {Transparency = 0.3, Color = Color3.fromRGB(180, 80, 255)}):Play()
+	end)
+
+	-- resize logic
 	local resizing = false
 	local resizeStart, resizeStartSize
 	local minW, minH = 400, 250
 
-	AddConnection(ResizeHandle.InputBegan, function(Input)
+	RCBtn.InputBegan:Connect(function(Input)
 		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-			resizing       = true
-			resizeStart    = Vector2.new(Input.Position.X, Input.Position.Y)
+			resizing        = true
+			resizeStart     = Vector2.new(Input.Position.X, Input.Position.Y)
 			resizeStartSize = Vector2.new(MainWindow.AbsoluteSize.X, MainWindow.AbsoluteSize.Y)
 		end
 	end)
-	AddConnection(UserInputService.InputEnded, function(Input)
+	UserInputService.InputEnded:Connect(function(Input)
 		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
 			resizing = false
 		end
 	end)
-	AddConnection(UserInputService.InputChanged, function(Input)
+	UserInputService.InputChanged:Connect(function(Input)
 		if resizing and Input.UserInputType == Enum.UserInputType.MouseMovement then
 			local delta = Vector2.new(Input.Position.X, Input.Position.Y) - resizeStart
 			local newW  = math.max(minW, resizeStartSize.X + delta.X)
 			local newH  = math.max(minH, resizeStartSize.Y + delta.Y)
-			MainWindow.Size = UDim2.new(0, newW, 0, newH)
-			-- keep sidebar and content fitting the new size
+			MainWindow.Size  = UDim2.new(0, newW, 0, newH)
 			WindowStuff.Size = UDim2.new(0, 150, 1, -50)
 		end
 	end)
@@ -1171,7 +1483,13 @@ function OrionLib:MakeWindow(WindowConfig)
 		local uiScale = getUIScale()
 		TweenService:Create(uiScale, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Scale = 0}):Play()
 		task.delay(0.28, function()
-			MainWindow.Visible = false
+			MainWindow.Visible    = false
+			BottomPill.Visible    = false
+			ResizeArcClip.Visible = false
+			if ViewportOpen then
+				ViewportOpen = false
+				ViewportFrame.Visible = false
+			end
 			uiScale.Scale = 1
 			toggleDebounce = false
 		end)
@@ -1183,7 +1501,12 @@ function OrionLib:MakeWindow(WindowConfig)
 		UIHidden = false
 		local uiScale = getUIScale()
 		uiScale.Scale = 0
-		MainWindow.Visible = true
+		-- always reopen centered
+		MainWindow.AnchorPoint = Vector2.new(0.5, 0.5)
+		MainWindow.Position    = UDim2.new(0.5, 0, 0.5, 0)
+		MainWindow.Visible     = true
+		BottomPill.Visible     = true
+		ResizeArcClip.Visible  = true
 		TweenService:Create(uiScale, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
 		task.delay(0.45, function()
 			toggleDebounce = false
@@ -1220,15 +1543,20 @@ function OrionLib:MakeWindow(WindowConfig)
 		if Minimized then
 			TweenService:Create(MainWindow, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 615, 0, 344)}):Play()
 			MinimizeBtn.Ico.Image = "rbxassetid://7072719338"
-			wait(0.02)
-			WindowStuff.Visible = true
+			task.wait(0.02)
+			WindowStuff.Visible   = true
 			WindowTopBarLine.Visible = true
+			BottomPill.Visible    = true
+			ResizeArcClip.Visible = true
 		else
 			WindowTopBarLine.Visible = false
 			MinimizeBtn.Ico.Image = "rbxassetid://7072720870"
-			TweenService:Create(MainWindow, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, WindowName.TextBounds.X + 140, 0, 50)}):Play()
-			wait(0.1)
-			WindowStuff.Visible = false
+			local minWidth = math.max(400, WindowName.TextBounds.X + 320)
+			TweenService:Create(MainWindow, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, minWidth, 0, 50)}):Play()
+			task.wait(0.1)
+			WindowStuff.Visible   = false
+			BottomPill.Visible    = false
+			ResizeArcClip.Visible = false
 		end
 		Minimized = not Minimized
 	end)
@@ -1291,6 +1619,10 @@ function OrionLib:MakeWindow(WindowConfig)
 			Container.CanvasSize = UDim2.new(0, 0, 0, Container.UIListLayout.AbsoluteContentSize.Y + 30)
 		end)
 
+		local _TabTitle = TabFrame:FindFirstChild("Title")
+		local _TabIco   = TabFrame:FindFirstChild("Ico")
+		local si = TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
 		if FirstTab then
 			FirstTab = false
 			TabIconLbl.TextTransparency = 0
@@ -1300,26 +1632,23 @@ function OrionLib:MakeWindow(WindowConfig)
 			end
 			Container.Visible = true
 		end
-
-		-- Tab hover: smooth subtle grow
-		local _TabTitle = TabFrame:FindFirstChild("Title")
-		local _TabIco   = TabFrame:FindFirstChild("Ico")
-		local smoothInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 		AddConnection(TabFrame.MouseEnter, function()
 			if not Container.Visible then
-				if _TabTitle then TweenService:Create(_TabTitle, smoothInfo, {TextSize = 14.5, TextTransparency = 0.15}):Play() end
-				if _TabIco   then TweenService:Create(_TabIco,   smoothInfo, {TextSize = 15.5, TextTransparency = 0.1}):Play() end
+				if _TabTitle then TweenService:Create(_TabTitle, si, {TextSize = 14.3, TextTransparency = 0.1}):Play() end
+				if _TabIco   then TweenService:Create(_TabIco,   si, {TextSize = 15.3, TextTransparency = 0.05}):Play() end
+
 			end
 		end)
 		AddConnection(TabFrame.MouseLeave, function()
 			if not Container.Visible then
-				if _TabTitle then TweenService:Create(_TabTitle, smoothInfo, {TextSize = 14, TextTransparency = 0.4}):Play() end
-				if _TabIco   then TweenService:Create(_TabIco,   smoothInfo, {TextSize = 15, TextTransparency = 0.2}):Play() end
+				if _TabTitle then TweenService:Create(_TabTitle, si, {TextSize = 14, TextTransparency = 0.4}):Play() end
+				if _TabIco   then TweenService:Create(_TabIco,   si, {TextSize = 15, TextTransparency = 0.2}):Play() end
+
 			end
 		end)
 
 		AddConnection(TabFrame.MouseButton1Click, function()
-			-- deactivate all other tabs
+			-- Deactivate all tabs
 			for _, Tab in next, TabHolder:GetChildren() do
 				if Tab:IsA("TextButton") then
 					local TabTitle = Tab:FindFirstChild("Title")
@@ -1333,13 +1662,15 @@ function OrionLib:MakeWindow(WindowConfig)
 					end
 				end
 			end
+
 			-- hide all containers
 			for _, ItemContainer in next, MainWindow:GetChildren() do
 				if ItemContainer.Name == "ItemContainer" then
 					ItemContainer.Visible = false
 				end
 			end
-			-- activate this tab label
+
+			-- Activate this tab
 			if _TabTitle then
 				TweenService:Create(_TabTitle, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0, TextSize = 14}):Play()
 				_TabTitle.Font = Enum.Font.GothamBlack
@@ -1347,32 +1678,17 @@ function OrionLib:MakeWindow(WindowConfig)
 			if _TabIco then
 				TweenService:Create(_TabIco, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0, TextSize = 16, TextColor3 = Color3.fromRGB(190, 100, 255)}):Play()
 			end
-			-- show container and animate elements in with stagger
+
+			-- top-to-bottom reveal: slide entire container down from above
+			Container.Position = UDim2.new(0, 150, 0, 30)  -- start above final pos
 			Container.Visible = true
 			task.defer(function()
 				Container.CanvasSize = UDim2.new(0, 0, 0, Container.UIListLayout.AbsoluteContentSize.Y + 30)
-				-- stagger each child element: slide in from left + fade in
-				local children = {}
-				for _, child in ipairs(Container:GetChildren()) do
-					if child:IsA("Frame") or child:IsA("TextButton") then
-						table.insert(children, child)
-					end
-				end
-				for i, child in ipairs(children) do
-					child.Position = UDim2.new(-0.08, 0, child.Position.Y.Scale, child.Position.Y.Offset)
-					if child:IsA("Frame") then
-						child.BackgroundTransparency = 1
-					end
-					task.delay((i - 1) * 0.03, function()
-						if child and child.Parent then
-							TweenService:Create(child, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-								Position = UDim2.new(0, 0, child.Position.Y.Scale, child.Position.Y.Offset)
-							}):Play()
-
-						end
-					end)
-				end
 			end)
+			TweenService:Create(Container,
+				TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+				{Position = UDim2.new(0, 150, 0, 50)}
+			):Play()
 		end)
 
 		local function GetElements(ItemParent)
@@ -1483,25 +1799,30 @@ function OrionLib:MakeWindow(WindowConfig)
 				ToggleConfig.Name     = ToggleConfig.Name     or "Toggle"
 				ToggleConfig.Default  = ToggleConfig.Default  or false
 				ToggleConfig.Callback = ToggleConfig.Callback or function() end
-				ToggleConfig.Color    = ToggleConfig.Color    or Color3.fromRGB(9, 99, 195)
+				ToggleConfig.Color    = ToggleConfig.Color    or Color3.fromRGB(120, 50, 200)
 				ToggleConfig.Flag     = ToggleConfig.Flag     or nil
 				ToggleConfig.Save     = ToggleConfig.Save     or false
 				local Toggle = {Value = ToggleConfig.Default, Save = ToggleConfig.Save, Type = "Toggle"}
 				local Click  = SetProps(MakeElement("Button"), {Size = UDim2.new(1, 0, 1, 0)})
-				local ToggleBox = SetChildren(SetProps(MakeElement("RoundFrame", ToggleConfig.Color, 0, 4), {
-					Size        = UDim2.new(0, 24, 0, 24),
-					Position    = UDim2.new(1, -24, 0.5, 0),
-					AnchorPoint = Vector2.new(0.5, 0.5)
-				}), {
-					SetProps(MakeElement("Stroke"), {Color = ToggleConfig.Color, Name = "Stroke", Transparency = 0.5}),
-					SetProps(MakeElement("Image", "rbxassetid://3944680095"), {
-						Size        = UDim2.new(0, 20, 0, 20),
-						AnchorPoint = Vector2.new(0.5, 0.5),
-						Position    = UDim2.new(0.5, 0, 0.5, 0),
-						ImageColor3 = Color3.fromRGB(255, 255, 255),
-						Name        = "Ico"
-					})
+				-- Switch track
+				local SwitchTrack = Create("Frame", {
+					Size             = UDim2.new(0, 40, 0, 22),
+					Position         = UDim2.new(1, -50, 0.5, -11),
+					BackgroundColor3 = OrionLib.Themes.Default.Divider,
+					BorderSizePixel  = 0,
 				})
+				Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = SwitchTrack})
+				Create("UIStroke", {Color = OrionLib.Themes.Default.Stroke, Thickness = 1, Name = "Stroke", Parent = SwitchTrack})
+				-- Switch knob
+				local SwitchKnob = Create("Frame", {
+					Size             = UDim2.new(0, 16, 0, 16),
+					Position         = UDim2.new(0, 3, 0.5, -8),
+					BackgroundColor3 = Color3.fromRGB(160, 160, 180),
+					BorderSizePixel  = 0,
+					ZIndex           = 2,
+					Parent           = SwitchTrack
+				})
+				Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = SwitchKnob})
 				local ToggleFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 5), {
 					Size   = UDim2.new(1, 0, 0, 38),
 					Parent = ItemParent
@@ -1513,14 +1834,21 @@ function OrionLib:MakeWindow(WindowConfig)
 						Name     = "Content"
 					}), "Text"),
 					AddThemeObject(MakeElement("Stroke"), "Stroke"),
-					ToggleBox,
+					SwitchTrack,
 					Click
 				}), "Second")
 				function Toggle:Set(Value)
 					Toggle.Value = Value
-					TweenService:Create(ToggleBox,        TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Toggle.Value and ToggleConfig.Color or OrionLib.Themes.Default.Divider}):Play()
-					TweenService:Create(ToggleBox.Stroke, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Color = Toggle.Value and ToggleConfig.Color or OrionLib.Themes.Default.Stroke}):Play()
-					TweenService:Create(ToggleBox.Ico,    TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {ImageTransparency = Toggle.Value and 0 or 1, Size = Toggle.Value and UDim2.new(0, 20, 0, 20) or UDim2.new(0, 8, 0, 8)}):Play()
+					local tw = TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+					if Toggle.Value then
+						TweenService:Create(SwitchTrack,        tw, {BackgroundColor3 = ToggleConfig.Color}):Play()
+						TweenService:Create(SwitchTrack.Stroke, tw, {Color = ToggleConfig.Color}):Play()
+						TweenService:Create(SwitchKnob,         tw, {Position = UDim2.new(0, 21, 0.5, -8), BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+					else
+						TweenService:Create(SwitchTrack,        tw, {BackgroundColor3 = OrionLib.Themes.Default.Divider}):Play()
+						TweenService:Create(SwitchTrack.Stroke, tw, {Color = OrionLib.Themes.Default.Stroke}):Play()
+						TweenService:Create(SwitchKnob,         tw, {Position = UDim2.new(0, 3, 0.5, -8), BackgroundColor3 = Color3.fromRGB(160, 160, 180)}):Play()
+					end
 					ToggleConfig.Callback(Toggle.Value)
 				end
 				Toggle:Set(Toggle.Value)
@@ -1654,7 +1982,17 @@ function OrionLib:MakeWindow(WindowConfig)
 							MakeElement("Corner", 0, 6),
 							AddThemeObject(SetProps(MakeElement("Label", Option, 13, 0.4), {Position = UDim2.new(0, 8, 0, 0), Size = UDim2.new(1, -8, 1, 0), Name = "Title"}), "Text")
 						}), {Parent = DropdownContainer, Size = UDim2.new(1, 0, 0, 28), BackgroundTransparency = 1, ClipsDescendants = true}), "Divider")
-						AddConnection(OptionBtn.MouseButton1Click, function() Dropdown:Set(Option) SaveCfg(game.GameId) end)
+						AddConnection(OptionBtn.MouseButton1Click, function()
+						Dropdown:Set(Option)
+						SaveCfg(game.GameId)
+						-- auto close dropdown after selecting
+						if Dropdown.Toggled then
+							Dropdown.Toggled = false
+							DropdownFrame.F.Line.Visible = false
+							TweenService:Create(DropdownFrame.F.Ico, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Rotation = 0}):Play()
+							TweenService:Create(DropdownFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 38)}):Play()
+						end
+					end)
 						Dropdown.Buttons[Option] = OptionBtn
 					end
 				end
@@ -1867,33 +2205,99 @@ function OrionLib:MakeWindow(WindowConfig)
 
 		function ElementFunction:AddSection(SectionConfig)
 			SectionConfig = SectionConfig or {}
-			SectionConfig.Name = SectionConfig.Name or "Section"
-			local SectionFrame = SetChildren(SetProps(MakeElement("TFrame"), {
-				Size   = UDim2.new(1, 0, 0, 30),
-				Parent = Container
+			SectionConfig.Name        = SectionConfig.Name        or "Section"
+			SectionConfig.Collapsible = SectionConfig.Collapsible or false  -- opt-in only
+
+			local collapsed = SectionConfig.Collapsible  -- if collapsible, start closed
+			local fullH     = 0
+
+			local SectionLabel = AddThemeObject(SetProps(MakeElement("Label", SectionConfig.Name, 15), {
+				Size     = UDim2.new(1, -30, 0, 20),
+				Position = UDim2.new(0, 0, 0, 4),
+				Font     = Enum.Font.GothamBlack,
+				Name     = "SectionLabel"
+			}), "Text")
+
+			local HolderFrame = SetChildren(SetProps(MakeElement("TFrame"), {
+				AnchorPoint      = Vector2.new(0, 0),
+				Size             = UDim2.new(1, 0, SectionConfig.Collapsible and 0 or 1, SectionConfig.Collapsible and 0 or -24),
+				Position         = UDim2.new(0, 0, 0, 32),
+				Name             = "Holder",
+				ClipsDescendants = SectionConfig.Collapsible
 			}), {
-				AddThemeObject(SetProps(MakeElement("Label", SectionConfig.Name, 15), {
-					Size     = UDim2.new(1, -12, 0, 20),
-					Position = UDim2.new(0, 0, 0, 4),
-					Font     = Enum.Font.GothamBlack
-				}), "Text"),
-				SetChildren(SetProps(MakeElement("TFrame"), {
-					AnchorPoint = Vector2.new(0, 0),
-					Size        = UDim2.new(1, 0, 1, -24),
-					Position    = UDim2.new(0, 0, 0, 23),
-					Name        = "Holder"
-				}), {
-					MakeElement("List", 0, 6)
-				})
+				MakeElement("List", 0, 6),
+				MakeElement("Padding", SectionConfig.Collapsible and 20 or 0, 0, 0, 0)
 			})
+
+			local children = { SectionLabel, HolderFrame }
+
+			-- Only add arrow and click button if collapsible
+			if SectionConfig.Collapsible then
+				local ArrowLbl = Create("TextLabel", {
+					Text                   = ">",
+					Font                   = Enum.Font.GothamBold,
+					TextSize               = 14,
+					TextColor3             = Color3.fromRGB(160, 100, 210),
+					BackgroundTransparency = 1,
+					Size                   = UDim2.new(0, 16, 0, 20),
+					Position               = UDim2.new(1, -20, 0, 4),
+					TextXAlignment         = Enum.TextXAlignment.Center,
+					Rotation               = 90,  -- pointing down = closed
+					ZIndex                 = 3
+				})
+				table.insert(children, ArrowLbl)
+
+				local ClickBtn = Create("TextButton", {
+					Text = "", BackgroundTransparency = 1,
+					Size = UDim2.new(1, 0, 0, 26), ZIndex = 5
+				})
+				table.insert(children, ClickBtn)
+
+				local SectionFrame = SetChildren(SetProps(MakeElement("TFrame"), {
+					Size = UDim2.new(1, 0, 0, 28), Parent = Container, ClipsDescendants = true
+				}), children)
+
+				local tw = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+				AddConnection(HolderFrame.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+					fullH = HolderFrame.UIListLayout.AbsoluteContentSize.Y
+					if not collapsed then
+						SectionFrame.Size = UDim2.new(1, 0, 0, fullH + 30)
+						HolderFrame.Size  = UDim2.new(1, 0, 0, fullH)
+					end
+				end)
+
+				AddConnection(ClickBtn.MouseButton1Click, function()
+					collapsed = not collapsed
+					if collapsed then
+						TweenService:Create(ArrowLbl,     tw, {Rotation = -90}):Play()
+						TweenService:Create(HolderFrame,  tw, {Size = UDim2.new(1, 0, 0, 0)}):Play()
+						TweenService:Create(SectionFrame, tw, {Size = UDim2.new(1, 0, 0, 28)}):Play()
+					else
+						fullH = HolderFrame.UIListLayout.AbsoluteContentSize.Y
+						TweenService:Create(ArrowLbl,     tw, {Rotation = 90}):Play()
+						TweenService:Create(HolderFrame,  tw, {Size = UDim2.new(1, 0, 0, fullH)}):Play()
+						TweenService:Create(SectionFrame, tw, {Size = UDim2.new(1, 0, 0, fullH + 30)}):Play()
+					end
+				end)
+
+				local SectionFunction = {}
+				for i, v in next, GetElements(HolderFrame) do SectionFunction[i] = v end
+				return SectionFunction
+			end
+
+			-- Non-collapsible: normal always-open section
+			local SectionFrame = SetChildren(SetProps(MakeElement("TFrame"), {
+				Size = UDim2.new(1, 0, 0, 26), Parent = Container
+			}), children)
+
 			AddConnection(SectionFrame.Holder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
 				SectionFrame.Size        = UDim2.new(1, 0, 0, SectionFrame.Holder.UIListLayout.AbsoluteContentSize.Y + 31)
 				SectionFrame.Holder.Size = UDim2.new(1, 0, 0, SectionFrame.Holder.UIListLayout.AbsoluteContentSize.Y)
 			end)
+
 			local SectionFunction = {}
-			for i, v in next, GetElements(SectionFrame.Holder) do
-				SectionFunction[i] = v
-			end
+			for i, v in next, GetElements(HolderFrame) do SectionFunction[i] = v end
 			return SectionFunction
 		end
 
