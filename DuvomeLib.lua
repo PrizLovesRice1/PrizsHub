@@ -3030,14 +3030,14 @@ function OrionLib:MakeWindow(WindowConfig)
 					Parent           = ItemParent,
 					Position         = UDim2.new(0, 0, 0, 38),
 					Size             = UDim2.new(1, 0, 1, -38),
-					ClipsDescendants = false,
+					ClipsDescendants = true,
 					Visible          = false
 				}), "Divider")
 				local Click = SetProps(MakeElement("Button"), {Size = UDim2.new(1, 0, 1, 0)})
 				local DropdownFrame = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 5), {
 					Size             = UDim2.new(1, 0, 0, 38),
 					Parent           = ItemParent,
-					ClipsDescendants = false
+					ClipsDescendants = true
 				}), {
 					DropdownContainer,
 					SetProps(SetChildren(MakeElement("TFrame"), {
@@ -3046,7 +3046,7 @@ function OrionLib:MakeWindow(WindowConfig)
 						AddThemeObject(SetProps(MakeElement("Label", "Selected", 13), {Size = UDim2.new(1, -40, 1, 0), Font = Enum.Font.Gotham, Name = "Selected", TextXAlignment = Enum.TextXAlignment.Right}), "TextDark"),
 						AddThemeObject(SetProps(MakeElement("Frame"), {Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 1, -1), Name = "Line", Visible = false}), "Stroke"),
 						Click
-					}), {Size = UDim2.new(1, 0, 0, 38), ClipsDescendants = false, Name = "F"}),
+					}), {Size = UDim2.new(1, 0, 0, 38), ClipsDescendants = true, Name = "F"}),
 					AddThemeObject(MakeElement("Stroke"), "Stroke"),
 					MakeElement("Corner")
 				}), "Second")
