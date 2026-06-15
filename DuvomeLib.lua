@@ -538,7 +538,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	end
 
 	local TabHolder = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 4), {
-		Size     = UDim2.new(1, 0, 1, -72),
+		Size     = UDim2.new(1, 0, 1, -112),
 		Position = UDim2.new(0, 0, 0, 32)
 	}), {
 		MakeElement("List"),
@@ -943,7 +943,6 @@ function OrionLib:MakeWindow(WindowConfig)
 	PencilCfgBtn.BorderSizePixel = 0
 	PencilCfgBtn.AnchorPoint = Vector2.new(0, 0)
 	PencilCfgBtn.Size = UDim2.new(0, 30, 0, 30)
-	PencilCfgBtn.AnchorPoint = Vector2.new(0, 0)
 	PencilCfgBtn.Position = UDim2.new(0, 7, 1, -88)
 	PencilCfgBtn.ZIndex = 8
 	PencilCfgBtn.Parent = WindowStuff
