@@ -538,7 +538,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	end
 
 	local TabHolder = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 4), {
-		Size     = UDim2.new(1, 0, 1, -112),
+		Size     = UDim2.new(1, 0, 1, -160),
 		Position = UDim2.new(0, 0, 0, 32)
 	}), {
 		MakeElement("List"),
