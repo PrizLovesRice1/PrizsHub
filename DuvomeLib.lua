@@ -34,11 +34,22 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local HttpService = game:GetService("HttpService")
 
+local BICONS_PATH = "rbxasset://LuaPackages/Packages/_Index/BuilderIcons/BuilderIcons/BuilderIcons.json"
+
 local function SafeFont(path, weight, style)
-	local ok, f = pcall(function()
-		return SafeFont(path, weight or Enum.FontWeight.Regular, style or Enum.FontStyle.Normal)
-	end)
+	local ok, f = pcall(Font.new, path, weight or Enum.FontWeight.Regular, style or Enum.FontStyle.Normal)
 	return ok and f or Font.fromEnum(Enum.Font.GothamBold)
+end
+
+local function SetFontFace(obj, path)
+	pcall(function()
+		obj.FontFace = Font.new(path or BICONS_PATH, Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+	end)
+end
+
+local function MakeBIconFont()
+	local ok, f = pcall(Font.new, BICONS_PATH, Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+	return ok and f or nil
 end
 
 
@@ -551,7 +562,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	-- magnifying glass button (always visible, centered in bar)
 	local SearchIcon = Create("TextButton", {
 		Text = "magnifying-glass",
-		FontFace = _iconFont and SafeFont(_iconFont, Enum.FontWeight.Bold, Enum.FontStyle.Normal) or nil,
+		FontFace = MakeBIconFont(),
 		TextSize = 16,
 		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Center,
@@ -856,7 +867,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	}), {
 		AddThemeObject(SetProps(Create("TextLabel", {
 			Text        = "gear",
-			FontFace = _iconFont and SafeFont(_iconFont, Enum.FontWeight.Bold, Enum.FontStyle.Normal) or nil,
+			FontFace = MakeBIconFont(),
 			TextSize    = 16,
 			TextWrapped = true,
 			TextXAlignment = Enum.TextXAlignment.Center,
@@ -940,7 +951,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	local _ps = Instance.new("UIStroke", PencilCfgBtn); _ps.Color = Color3.fromRGB(90, 30, 150); _ps.Thickness = 1
 	local PencilIco = Instance.new("TextLabel", PencilCfgBtn)
 	PencilIco.Text = "pencil-square"
-	if _iconFont then SetFontFace(PencilIco, _iconFont) end
+	SetFontFace(PencilIco, BICONS_PATH)
 	PencilIco.TextSize = 15
 	PencilIco.TextWrapped = true
 	PencilIco.TextColor3 = Color3.fromRGB(160, 100, 220)
@@ -1078,7 +1089,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			-- load button
 			local loadBtn = Create("TextButton", {
 				Text="arrow-small-down",
-				FontFace = _iconFont and SafeFont(_iconFont, Enum.FontWeight.Bold, Enum.FontStyle.Normal) or nil,
+				FontFace = MakeBIconFont(),
 				TextSize=14, TextWrapped=true,
 				TextColor3=Color3.fromRGB(140,90,200), BackgroundTransparency=1,
 				Size=UDim2.new(0,22,1,0), Position=UDim2.new(1,-44,0,0),
@@ -2364,7 +2375,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		local iconChar = (TabConfig.Icon ~= "" and TabConfig.Icon) or "three-dots-horizontal"
 		local TabIconLbl = Create("TextLabel", {
 			Text             = iconChar,
-			FontFace = _iconFont and SafeFont(_iconFont, Enum.FontWeight.Bold, Enum.FontStyle.Normal) or nil,
+			FontFace = MakeBIconFont(),
 			TextSize         = 16,
 			TextColor3       = Color3.fromRGB(160, 80, 255),
 			TextTransparency = 0.2,
@@ -3952,7 +3963,7 @@ local function MakeKeyUI(cfg, onSuccess)
 	PB.Size = UDim2.new(0, 28, 1, 0); PB.Position = UDim2.new(1, -30, 0, 0); PB.ZIndex = 104
 	local PBImg = Instance.new("TextLabel", PB)
 	PBImg.Text = "two-stacked-squares"
-	if _iconFont then SetFontFace(PBImg, _iconFont) end
+	SetFontFace(PBImg, BICONS_PATH)
 	PBImg.TextSize = 14
 	PBImg.TextWrapped = true
 	PBImg.TextColor3 = Color3.fromRGB(120, 65, 185)
