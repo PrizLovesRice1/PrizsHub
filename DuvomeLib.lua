@@ -179,10 +179,10 @@ end
 local function Create(Name, Properties, Children)
 	local Object = Instance.new(Name)
 	for i, v in next, Properties or {} do
-		Object[i] = v
+		pcall(function() Object[i] = v end)
 	end
 	for i, v in next, Children or {} do
-		v.Parent = Object
+		pcall(function() v.Parent = Object end)
 	end
 	return Object
 end
@@ -502,6 +502,7 @@ function OrionLib:MakeWindow(WindowConfig)
 
 	WindowConfig = WindowConfig or {}
 	WindowConfig.Name         = WindowConfig.Name         or "Duvome"
+	WindowConfig.IconFont     = WindowConfig.IconFont or nil  -- set to BuilderIcons path in example
 	WindowConfig.ConfigFolder = WindowConfig.ConfigFolder or WindowConfig.Name
 	WindowConfig.SaveConfig   = WindowConfig.SaveConfig   or false
 	WindowConfig.HidePremium  = WindowConfig.HidePremium  or false
@@ -514,6 +515,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	WindowConfig.Icon          = WindowConfig.Icon          or "rbxassetid://8834748103"
 	WindowConfig.IntroIcon     = WindowConfig.IntroIcon     or "rbxassetid://8834748103"
 	OrionLib.Folder  = WindowConfig.ConfigFolder
+	local _iconFont = WindowConfig.IconFont
 	OrionLib.SaveCfg = WindowConfig.SaveConfig
 
 	if WindowConfig.SaveConfig then
@@ -549,7 +551,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	-- magnifying glass button (always visible, centered in bar)
 	local SearchIcon = Create("TextButton", {
 		Text = "magnifying-glass",
-		FontFace = SafeFont("rbxasset://LuaPackages/Packages/_Index/BuilderIcons/BuilderIcons/BuilderIcons.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+		FontFace = _iconFont and SafeFont(_iconFont, Enum.FontWeight.Bold, Enum.FontStyle.Normal) or nil,
 		TextSize = 16,
 		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Center,
@@ -854,7 +856,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	}), {
 		AddThemeObject(SetProps(Create("TextLabel", {
 			Text        = "gear",
-			FontFace    = SafeFont("rbxasset://LuaPackages/Packages/_Index/BuilderIcons/BuilderIcons/BuilderIcons.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+			FontFace = _iconFont and SafeFont(_iconFont, Enum.FontWeight.Bold, Enum.FontStyle.Normal) or nil,
 			TextSize    = 16,
 			TextWrapped = true,
 			TextXAlignment = Enum.TextXAlignment.Center,
@@ -938,7 +940,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	local _ps = Instance.new("UIStroke", PencilCfgBtn); _ps.Color = Color3.fromRGB(90, 30, 150); _ps.Thickness = 1
 	local PencilIco = Instance.new("TextLabel", PencilCfgBtn)
 	PencilIco.Text = "pencil-square"
-	PencilIco.FontFace = SafeFont("rbxasset://LuaPackages/Packages/_Index/BuilderIcons/BuilderIcons/BuilderIcons.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+	if _iconFont then SetFontFace(PencilIco, _iconFont) end
 	PencilIco.TextSize = 15
 	PencilIco.TextWrapped = true
 	PencilIco.TextColor3 = Color3.fromRGB(160, 100, 220)
@@ -1076,7 +1078,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			-- load button
 			local loadBtn = Create("TextButton", {
 				Text="arrow-small-down",
-				FontFace = SafeFont("rbxasset://LuaPackages/Packages/_Index/BuilderIcons/BuilderIcons/BuilderIcons.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+				FontFace = _iconFont and SafeFont(_iconFont, Enum.FontWeight.Bold, Enum.FontStyle.Normal) or nil,
 				TextSize=14, TextWrapped=true,
 				TextColor3=Color3.fromRGB(140,90,200), BackgroundTransparency=1,
 				Size=UDim2.new(0,22,1,0), Position=UDim2.new(1,-44,0,0),
@@ -2362,7 +2364,7 @@ function OrionLib:MakeWindow(WindowConfig)
 		local iconChar = (TabConfig.Icon ~= "" and TabConfig.Icon) or "three-dots-horizontal"
 		local TabIconLbl = Create("TextLabel", {
 			Text             = iconChar,
-			FontFace         = SafeFont("rbxasset://LuaPackages/Packages/_Index/BuilderIcons/BuilderIcons/BuilderIcons.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+			FontFace = _iconFont and SafeFont(_iconFont, Enum.FontWeight.Bold, Enum.FontStyle.Normal) or nil,
 			TextSize         = 16,
 			TextColor3       = Color3.fromRGB(160, 80, 255),
 			TextTransparency = 0.2,
@@ -3950,7 +3952,7 @@ local function MakeKeyUI(cfg, onSuccess)
 	PB.Size = UDim2.new(0, 28, 1, 0); PB.Position = UDim2.new(1, -30, 0, 0); PB.ZIndex = 104
 	local PBImg = Instance.new("TextLabel", PB)
 	PBImg.Text = "two-stacked-squares"
-	PBImg.FontFace = SafeFont("rbxasset://LuaPackages/Packages/_Index/BuilderIcons/BuilderIcons/BuilderIcons.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+	if _iconFont then SetFontFace(PBImg, _iconFont) end
 	PBImg.TextSize = 14
 	PBImg.TextWrapped = true
 	PBImg.TextColor3 = Color3.fromRGB(120, 65, 185)
