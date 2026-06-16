@@ -538,7 +538,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	end
 
 	local TabHolder = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 4), {
-		Size     = UDim2.new(1, 0, 1, -160),
+		Size     = UDim2.new(1, 0, 1, -100),
 		Position = UDim2.new(0, 0, 0, 32)
 	}), {
 		MakeElement("List"),
@@ -3136,7 +3136,7 @@ function OrionLib:MakeWindow(WindowConfig)
 					Size   = UDim2.new(1, 0, 0, 38),
 					Parent = ItemParent
 				}), {
-					AddThemeObject(SetProps(MakeElement("Label", BindConfig.Name, 15), {Size = UDim2.new(1, -12, 1, 0), Position = UDim2.new(0, 12, 0, 0), Font = Enum.Font.GothamBold, Name = "Content"}), "Text"),
+					AddThemeObject(SetProps(MakeElement("Label", BindConfig.Name, 15), {Size = UDim2.new(1, -130, 1, 0), Position = UDim2.new(0, 12, 0, 0), Font = Enum.Font.GothamBold, Name = "Content"}), "Text"),
 					AddThemeObject(MakeElement("Stroke"), "Stroke"),
 					BindBox, Click
 				}), "Second")
@@ -3198,7 +3198,7 @@ function OrionLib:MakeWindow(WindowConfig)
 					Size   = UDim2.new(1, 0, 0, 38),
 					Parent = ItemParent
 				}), {
-					AddThemeObject(SetProps(MakeElement("Label", TextboxConfig.Name, 15), {Size = UDim2.new(1, -12, 1, 0), Position = UDim2.new(0, 12, 0, 0), Font = Enum.Font.GothamBold, Name = "Content"}), "Text"),
+					AddThemeObject(SetProps(MakeElement("Label", TextboxConfig.Name, 15), {Size = UDim2.new(1, -130, 1, 0), Position = UDim2.new(0, 12, 0, 0), Font = Enum.Font.GothamBold, Name = "Content"}), "Text"),
 					AddThemeObject(MakeElement("Stroke"), "Stroke"),
 					TextContainer, Click
 				}), "Second")
