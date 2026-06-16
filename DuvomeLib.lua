@@ -2681,13 +2681,17 @@ function OrionLib:MakeWindow(WindowConfig)
 				})
 				Create("UICorner", {CornerRadius = UDim.new(0, 6), Parent = pop})
 				Create("UIStroke", {Color = Color3.fromRGB(90, 30, 140), Thickness = 1, Parent = pop})
-				local popList = Create("UIListLayout", {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = pop})
-				Create("UIPadding", {PaddingLeft=UDim.new(0,10),PaddingRight=UDim.new(0,10),PaddingTop=UDim.new(0,8),PaddingBottom=UDim.new(0,8), Parent=pop})
+				local popContent = Create("Frame", {
+					BackgroundTransparency = 1, BorderSizePixel = 0,
+					Size = UDim2.new(1, 0, 1, 0), ZIndex = 61, Parent = pop
+				})
+				local popList = Create("UIListLayout", {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = popContent})
+				Create("UIPadding", {PaddingLeft=UDim.new(0,10),PaddingRight=UDim.new(0,10),PaddingTop=UDim.new(0,8),PaddingBottom=UDim.new(0,8), Parent=popContent})
 
 				for _, item in ipairs(items) do
 					if item.Type == "slider" then
 						local val = item.Default or item.Min
-						local row = Create("Frame", {BackgroundTransparency=1, Size=UDim2.new(1,0,0,44), ZIndex=61, Parent=pop})
+						local row = Create("Frame", {BackgroundTransparency=1, Size=UDim2.new(1,0,0,44), ZIndex=62, Parent=popContent})
 						Create("TextLabel", {Text=item.Name, Font=Enum.Font.GothamBold, TextSize=12,
 							TextColor3=Color3.fromRGB(200,160,255), BackgroundTransparency=1,
 							Size=UDim2.new(1,-32,0,14), ZIndex=62, Parent=row})
@@ -2720,7 +2724,7 @@ function OrionLib:MakeWindow(WindowConfig)
 							end
 						end)
 					elseif item.Type == "input" then
-						local row = Create("Frame", {BackgroundTransparency=1, Size=UDim2.new(1,0,0,34), ZIndex=61, Parent=pop})
+						local row = Create("Frame", {BackgroundTransparency=1, Size=UDim2.new(1,0,0,34), ZIndex=62, Parent=popContent})
 						Create("TextLabel", {Text=item.Name, Font=Enum.Font.GothamBold, TextSize=12,
 							TextColor3=Color3.fromRGB(200,160,255), BackgroundTransparency=1,
 							Size=UDim2.new(0.45,0,1,0), ZIndex=62, Parent=row})
@@ -2732,7 +2736,7 @@ function OrionLib:MakeWindow(WindowConfig)
 						Create("UIStroke", {Color=Color3.fromRGB(80,30,130), Thickness=1, Parent=box})
 						box.FocusLost:Connect(function() item.Callback(box.Text) end)
 					elseif item.Type == "keybind" then
-						local row = Create("Frame", {BackgroundTransparency=1, Size=UDim2.new(1,0,0,34), ZIndex=61, Parent=pop})
+						local row = Create("Frame", {BackgroundTransparency=1, Size=UDim2.new(1,0,0,34), ZIndex=62, Parent=popContent})
 						Create("TextLabel", {Text="Keybind", Font=Enum.Font.GothamBold, TextSize=12,
 							TextColor3=Color3.fromRGB(200,160,255), BackgroundTransparency=1,
 							Size=UDim2.new(0.55,0,1,0), ZIndex=62, Parent=row})
