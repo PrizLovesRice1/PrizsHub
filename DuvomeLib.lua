@@ -3271,19 +3271,27 @@ function OrionLib:MakeWindow(WindowConfig)
 					AddThemeObject(MakeElement("Stroke"), "Stroke"),
 					TextContainer, Click
 				}), "Second")
+				local _resizing = false
 				AddConnection(TextboxActual:GetPropertyChangedSignal("Text"), function()
+					if _resizing then return end
 					local w = math.clamp(TextboxActual.TextBounds.X + 16, 24, 130)
 					TweenService:Create(TextContainer,TweenInfo.new(0.45,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Size=UDim2.new(0,w,0,24)}):Play()
 				end)
 				AddConnection(TextboxActual.FocusLost, function() TextboxConfig.Callback(TextboxActual.Text) if TextboxConfig.TextDisappear then TextboxActual.Text="" end end)
 				TextboxActual.Text = TextboxConfig.Default
+				local _resizing = false
 				task.spawn(function()
-					for i = 1, 10 do
+					_resizing = true
+					local hadText = TextboxConfig.Default ~= ""
+					if not hadText then TextboxActual.Text = TextboxActual.PlaceholderText end
+					for i = 1, 15 do
 						RunService.RenderStepped:Wait()
-						if TextboxActual.TextBounds.X > 0 or TextboxConfig.Default == "" then break end
+						if TextboxActual.TextBounds.X > 0 then break end
 					end
 					local w = math.clamp(TextboxActual.TextBounds.X + 16, 24, 130)
 					TextContainer.Size = UDim2.new(0,w,0,24)
+					if not hadText then TextboxActual.Text = "" end
+					_resizing = false
 				end)
 				AddConnection(Click.MouseEnter,      function() TweenService:Create(TextboxFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+3)}):Play() end)
 				AddConnection(Click.MouseLeave,      function() TweenService:Create(TextboxFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=OrionLib.Themes[OrionLib.SelectedTheme].Second}):Play() end)
