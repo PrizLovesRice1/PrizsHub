@@ -2647,15 +2647,14 @@ function OrionLib:MakeWindow(WindowConfig)
 					}), "TextDark"),
 					AddThemeObject(MakeElement("Stroke"), "Stroke")
 				}), "Second")
-				AddConnection(ParagraphFrame.Content:GetPropertyChangedSignal("Text"), function()
+				local function resizeParagraph()
 					ParagraphFrame.Content.Size = UDim2.new(1, -24, 0, ParagraphFrame.Content.TextBounds.Y)
 					ParagraphFrame.Size         = UDim2.new(1, 0, 0, ParagraphFrame.Content.TextBounds.Y + 35)
-				end)
+				end
+				AddConnection(ParagraphFrame.Content:GetPropertyChangedSignal("Text"), resizeParagraph)
+				AddConnection(ParagraphFrame:GetPropertyChangedSignal("AbsoluteSize"), resizeParagraph)
 				ParagraphFrame.Content.Text = Content
-				task.defer(function()
-					ParagraphFrame.Content.Size = UDim2.new(1, -24, 0, ParagraphFrame.Content.TextBounds.Y)
-					ParagraphFrame.Size         = UDim2.new(1, 0, 0, ParagraphFrame.Content.TextBounds.Y + 35)
-				end)
+				task.defer(resizeParagraph)
 				local ParagraphFunction = {}
 				function ParagraphFunction:Set(ToChange) ParagraphFrame.Content.Text = ToChange end
 				return ParagraphFunction
@@ -3129,7 +3128,7 @@ function OrionLib:MakeWindow(WindowConfig)
 				local Holding = false
 				local Click   = SetProps(MakeElement("Button"), {Size = UDim2.new(1, 0, 1, 0)})
 				local BindBox = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 4), {
-					Size        = UDim2.new(0, 90, 0, 24),
+					Size        = UDim2.new(0, 24, 0, 24),
 					Position    = UDim2.new(1, -12, 0.5, 0),
 					AnchorPoint = Vector2.new(1, 0.5),
 					ClipsDescendants = true
@@ -3146,7 +3145,7 @@ function OrionLib:MakeWindow(WindowConfig)
 					BindBox, Click
 				}), "Second")
 				AddConnection(BindBox.Value:GetPropertyChangedSignal("Text"), function()
-					local w = math.clamp(BindBox.Value.TextBounds.X + 16, 90, 130)
+					local w = math.clamp(BindBox.Value.TextBounds.X + 16, 24, 130)
 					TweenService:Create(BindBox,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Size=UDim2.new(0,w,0,24)}):Play()
 				end)
 				AddConnection(Click.InputEnded, function(Input) if Input.UserInputType==Enum.UserInputType.MouseButton1 then if Bind.Binding then return end Bind.Binding=true BindBox.Value.Text="" end end)
@@ -3195,7 +3194,7 @@ function OrionLib:MakeWindow(WindowConfig)
 					ClearTextOnFocus   = false
 				}), "Text")
 				local TextContainer = AddThemeObject(SetChildren(SetProps(MakeElement("RoundFrame", Color3.fromRGB(255, 255, 255), 0, 4), {
-					Size        = UDim2.new(0, 90, 0, 24),
+					Size        = UDim2.new(0, 24, 0, 24),
 					Position    = UDim2.new(1, -12, 0.5, 0),
 					AnchorPoint = Vector2.new(1, 0.5),
 					ClipsDescendants = true
@@ -3212,7 +3211,7 @@ function OrionLib:MakeWindow(WindowConfig)
 					TextContainer, Click
 				}), "Second")
 				AddConnection(TextboxActual:GetPropertyChangedSignal("Text"), function()
-					local w = math.clamp(TextboxActual.TextBounds.X + 16, 90, 130)
+					local w = math.clamp(TextboxActual.TextBounds.X + 16, 24, 130)
 					TweenService:Create(TextContainer,TweenInfo.new(0.45,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Size=UDim2.new(0,w,0,24)}):Play()
 				end)
 				AddConnection(TextboxActual.FocusLost, function() TextboxConfig.Callback(TextboxActual.Text) if TextboxConfig.TextDisappear then TextboxActual.Text="" end end)
