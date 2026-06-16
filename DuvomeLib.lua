@@ -30,6 +30,7 @@ TweenService = setmetatable({}, {
 	end
 })
 local RunService = game:GetService("RunService")
+local TextService = game:GetService("TextService")
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local HttpService = game:GetService("HttpService")
@@ -3206,7 +3207,8 @@ function OrionLib:MakeWindow(WindowConfig)
 					BindBox, Click
 				}), "Second")
 				AddConnection(BindBox.Value:GetPropertyChangedSignal("Text"), function()
-					local w = math.clamp(BindBox.Value.TextBounds.X + 16, 24, 130)
+					local sz = TextService:GetTextSize(BindBox.Value.Text, 14, Enum.Font.GothamBold, Vector2.new(1000,24))
+					local w = math.clamp(sz.X + 16, 24, 130)
 					TweenService:Create(BindBox,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Size=UDim2.new(0,w,0,24)}):Play()
 				end)
 				AddConnection(Click.InputEnded, function(Input) if Input.UserInputType==Enum.UserInputType.MouseButton1 then if Bind.Binding then return end Bind.Binding=true BindBox.Value.Text="" end end)
@@ -3232,14 +3234,6 @@ function OrionLib:MakeWindow(WindowConfig)
 				AddConnection(Click.MouseButton1Down, function() TweenService:Create(BindFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+6,OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+6,OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+6)}):Play() end)
 				function Bind:Set(Key) Bind.Binding=false Bind.Value=Key or Bind.Value Bind.Value=Bind.Value.Name or Bind.Value BindBox.Value.Text=Bind.Value end
 				Bind:Set(BindConfig.Default)
-				task.spawn(function()
-					for i = 1, 10 do
-						RunService.RenderStepped:Wait()
-						if BindBox.Value.TextBounds.X > 0 then break end
-					end
-					local w = math.clamp(BindBox.Value.TextBounds.X + 16, 24, 130)
-					BindBox.Size = UDim2.new(0,w,0,24)
-				end)
 				if BindConfig.Flag then OrionLib.Flags[BindConfig.Flag] = Bind end
 				return Bind
 			end
@@ -3280,26 +3274,22 @@ function OrionLib:MakeWindow(WindowConfig)
 					TextContainer, Click
 				}), "Second")
 				local _resizing = false
+				local function measureAndSize(text)
+					local sz = TextService:GetTextSize(text, 14, Enum.Font.GothamSemibold, Vector2.new(1000,24))
+					local w = math.clamp(sz.X + 16, 24, 130)
+					return w
+				end
 				AddConnection(TextboxActual:GetPropertyChangedSignal("Text"), function()
 					if _resizing then return end
-					local w = math.clamp(TextboxActual.TextBounds.X + 16, 24, 130)
+					local w = measureAndSize(TextboxActual.Text)
 					TweenService:Create(TextContainer,TweenInfo.new(0.45,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Size=UDim2.new(0,w,0,24)}):Play()
 				end)
 				AddConnection(TextboxActual.FocusLost, function() TextboxConfig.Callback(TextboxActual.Text) if TextboxConfig.TextDisappear then TextboxActual.Text="" end end)
+				_resizing = true
 				TextboxActual.Text = TextboxConfig.Default
-				task.spawn(function()
-					_resizing = true
-					local hadText = TextboxConfig.Default ~= ""
-					if not hadText then TextboxActual.Text = TextboxActual.PlaceholderText end
-					for i = 1, 15 do
-						RunService.RenderStepped:Wait()
-						if TextboxActual.TextBounds.X > 0 then break end
-					end
-					local w = math.clamp(TextboxActual.TextBounds.X + 16, 24, 130)
-					TextContainer.Size = UDim2.new(0,w,0,24)
-					if not hadText then TextboxActual.Text = "" end
-					_resizing = false
-				end)
+				local measureText = TextboxConfig.Default ~= "" and TextboxConfig.Default or "Input"
+				TextContainer.Size = UDim2.new(0, measureAndSize(measureText), 0, 24)
+				_resizing = false
 				AddConnection(Click.MouseEnter,      function() TweenService:Create(TextboxFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+3)}):Play() end)
 				AddConnection(Click.MouseLeave,      function() TweenService:Create(TextboxFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=OrionLib.Themes[OrionLib.SelectedTheme].Second}):Play() end)
 				AddConnection(Click.MouseButton1Up,  function() TweenService:Create(TextboxFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+3)}):Play() TextboxActual:CaptureFocus() end)
