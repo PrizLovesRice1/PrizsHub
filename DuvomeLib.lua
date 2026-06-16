@@ -2726,7 +2726,7 @@ function OrionLib:MakeWindow(WindowConfig)
 						box.FocusLost:Connect(function() item.Callback(box.Text) end)
 					elseif item.Type == "keybind" then
 						local row = Create("Frame", {BackgroundTransparency=1, Size=UDim2.new(1,0,0,34), ZIndex=61, Parent=pop})
-						Create("TextLabel", {Text=item.Name, Font=Enum.Font.GothamBold, TextSize=12,
+						Create("TextLabel", {Text="Keybind", Font=Enum.Font.GothamBold, TextSize=12,
 							TextColor3=Color3.fromRGB(200,160,255), BackgroundTransparency=1,
 							Size=UDim2.new(0.55,0,1,0), ZIndex=62, Parent=row})
 						local kbBox = Create("TextButton", {
@@ -2744,7 +2744,15 @@ function OrionLib:MakeWindow(WindowConfig)
 							kbBox.Text = "..."
 							local conn
 							conn = UserInputService.InputBegan:Connect(function(inp)
-								if listening and (inp.KeyCode ~= Enum.KeyCode.Unknown or inp.UserInputType == Enum.UserInputType.MouseButton1) then
+								if not listening then return end
+								if inp.KeyCode == Enum.KeyCode.Backspace then
+									listening = false
+									conn:Disconnect()
+									kbBox.Text = "None"
+									item.Callback(nil)
+									return
+								end
+								if inp.KeyCode ~= Enum.KeyCode.Unknown or inp.UserInputType == Enum.UserInputType.MouseButton1 then
 									listening = false
 									conn:Disconnect()
 									local key = inp.KeyCode ~= Enum.KeyCode.Unknown and inp.KeyCode or inp.UserInputType
@@ -3279,7 +3287,6 @@ function OrionLib:MakeWindow(WindowConfig)
 				end)
 				AddConnection(TextboxActual.FocusLost, function() TextboxConfig.Callback(TextboxActual.Text) if TextboxConfig.TextDisappear then TextboxActual.Text="" end end)
 				TextboxActual.Text = TextboxConfig.Default
-				local _resizing = false
 				task.spawn(function()
 					_resizing = true
 					local hadText = TextboxConfig.Default ~= ""
