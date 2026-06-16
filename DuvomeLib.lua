@@ -2817,8 +2817,8 @@ function OrionLib:MakeWindow(WindowConfig)
 				end)
 				function Button:Set(ButtonText) ButtonFrame.Content.Text = ButtonText end
 
-				-- keybind box to LEFT of fingerprint icon
-				if ButtonConfig.Keybind == nil then
+				-- keybind box to LEFT of fingerprint icon - OPT-IN ONLY (set ShowKeybind = true)
+				if ButtonConfig.ShowKeybind then
 					local _btnFlagId = (ButtonConfig.Flag or ButtonConfig.Name) .. "_btn"
 					makeKeybindBox(ButtonFrame, -58, ButtonConfig.Keybind, nil, _btnFlagId, function()
 						spawn(function() ButtonConfig.Callback() end)
@@ -2897,8 +2897,8 @@ function OrionLib:MakeWindow(WindowConfig)
 				AddConnection(Click.MouseButton1Down, function() TweenService:Create(ToggleFrame, TweenInfo.new(0.12, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(TS2.R*255+8, TS2.G*255+8, TS2.B*255+8)}):Play() end)
 				if ToggleConfig.Flag then OrionLib.Flags[ToggleConfig.Flag] = Toggle end
 
-				-- keybind box to LEFT of toggle switch (switch at x=-50, keybind at x=-98)
-				if ToggleConfig.Keybind == nil then
+				-- keybind box to LEFT of toggle switch - OPT-IN ONLY (set ShowKeybind = true)
+				if ToggleConfig.ShowKeybind then
 					local _togFlagId = (ToggleConfig.Flag or ToggleConfig.Name) .. "_tog"
 					makeKeybindBox(ToggleFrame, -80, ToggleConfig.Keybind, nil, _togFlagId, function()
 						Toggle:Set(not Toggle.Value)
@@ -2928,7 +2928,7 @@ function OrionLib:MakeWindow(WindowConfig)
 						else showP() setOpen(true) end
 					end)
 					-- if keybind box is also present, shift dot left to make room
-					local _hasKb = ToggleConfig.Keybind ~= false
+					local _hasKb = ToggleConfig.ShowKeybind == true
 					if _hasKb then
 						dotBtn.Position = UDim2.new(1, -106, 0.5, -12)
 					end
@@ -3171,6 +3171,10 @@ function OrionLib:MakeWindow(WindowConfig)
 				AddConnection(Click.MouseButton1Down, function() TweenService:Create(BindFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+6,OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+6,OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+6)}):Play() end)
 				function Bind:Set(Key) Bind.Binding=false Bind.Value=Key or Bind.Value Bind.Value=Bind.Value.Name or Bind.Value BindBox.Value.Text=Bind.Value end
 				Bind:Set(BindConfig.Default)
+				task.defer(function()
+					local w = math.clamp(BindBox.Value.TextBounds.X + 16, 24, 130)
+					BindBox.Size = UDim2.new(0,w,0,24)
+				end)
 				if BindConfig.Flag then OrionLib.Flags[BindConfig.Flag] = Bind end
 				return Bind
 			end
@@ -3216,6 +3220,10 @@ function OrionLib:MakeWindow(WindowConfig)
 				end)
 				AddConnection(TextboxActual.FocusLost, function() TextboxConfig.Callback(TextboxActual.Text) if TextboxConfig.TextDisappear then TextboxActual.Text="" end end)
 				TextboxActual.Text = TextboxConfig.Default
+				task.defer(function()
+					local w = math.clamp(TextboxActual.TextBounds.X + 16, 24, 130)
+					TextContainer.Size = UDim2.new(0,w,0,24)
+				end)
 				AddConnection(Click.MouseEnter,      function() TweenService:Create(TextboxFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+3)}):Play() end)
 				AddConnection(Click.MouseLeave,      function() TweenService:Create(TextboxFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=OrionLib.Themes[OrionLib.SelectedTheme].Second}):Play() end)
 				AddConnection(Click.MouseButton1Up,  function() TweenService:Create(TextboxFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+3)}):Play() TextboxActual:CaptureFocus() end)
