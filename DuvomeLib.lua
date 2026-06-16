@@ -2673,6 +2673,12 @@ function OrionLib:MakeWindow(WindowConfig)
 					ZIndex                 = 60,
 					Parent                 = Orion
 				})
+				-- invisible blocker absorbs all clicks so they don't pass through to elements below
+				local clickBlocker = Create("TextButton", {
+					Text = "", BackgroundTransparency = 1, BorderSizePixel = 0,
+					Size = UDim2.new(1, 0, 1, 0), ZIndex = 59, AutoButtonColor = false,
+					Parent = pop
+				})
 				Create("UICorner", {CornerRadius = UDim.new(0, 6), Parent = pop})
 				Create("UIStroke", {Color = Color3.fromRGB(90, 30, 140), Thickness = 1, Parent = pop})
 				local popList = Create("UIListLayout", {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = pop})
