@@ -538,7 +538,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	end
 
 	local TabHolder = AddThemeObject(SetChildren(SetProps(MakeElement("ScrollFrame", Color3.fromRGB(255, 255, 255), 4), {
-		Size     = UDim2.new(1, 0, 1, -100),
+		Size     = UDim2.new(1, 0, 1, -120),
 		Position = UDim2.new(0, 0, 0, 32)
 	}), {
 		MakeElement("List"),
@@ -2652,6 +2652,10 @@ function OrionLib:MakeWindow(WindowConfig)
 					ParagraphFrame.Size         = UDim2.new(1, 0, 0, ParagraphFrame.Content.TextBounds.Y + 35)
 				end)
 				ParagraphFrame.Content.Text = Content
+				task.defer(function()
+					ParagraphFrame.Content.Size = UDim2.new(1, -24, 0, ParagraphFrame.Content.TextBounds.Y)
+					ParagraphFrame.Size         = UDim2.new(1, 0, 0, ParagraphFrame.Content.TextBounds.Y + 35)
+				end)
 				local ParagraphFunction = {}
 				function ParagraphFunction:Set(ToChange) ParagraphFrame.Content.Text = ToChange end
 				return ParagraphFunction
@@ -3140,7 +3144,10 @@ function OrionLib:MakeWindow(WindowConfig)
 					AddThemeObject(MakeElement("Stroke"), "Stroke"),
 					BindBox, Click
 				}), "Second")
-				AddConnection(BindBox.Value:GetPropertyChangedSignal("Text"), function() TweenService:Create(BindBox,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Size=UDim2.new(0,BindBox.Value.TextBounds.X+16,0,24)}):Play() end)
+				AddConnection(BindBox.Value:GetPropertyChangedSignal("Text"), function()
+					local w = math.min(BindBox.Value.TextBounds.X + 16, 130)
+					TweenService:Create(BindBox,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Size=UDim2.new(0,w,0,24)}):Play()
+				end)
 				AddConnection(Click.InputEnded, function(Input) if Input.UserInputType==Enum.UserInputType.MouseButton1 then if Bind.Binding then return end Bind.Binding=true BindBox.Value.Text="" end end)
 				AddConnection(UserInputService.InputBegan, function(Input)
 					if UserInputService:GetFocusedTextBox() then return end
@@ -3202,7 +3209,10 @@ function OrionLib:MakeWindow(WindowConfig)
 					AddThemeObject(MakeElement("Stroke"), "Stroke"),
 					TextContainer, Click
 				}), "Second")
-				AddConnection(TextboxActual:GetPropertyChangedSignal("Text"), function() TweenService:Create(TextContainer,TweenInfo.new(0.45,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Size=UDim2.new(0,TextboxActual.TextBounds.X+16,0,24)}):Play() end)
+				AddConnection(TextboxActual:GetPropertyChangedSignal("Text"), function()
+					local w = math.min(TextboxActual.TextBounds.X + 16, 130)
+					TweenService:Create(TextContainer,TweenInfo.new(0.45,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{Size=UDim2.new(0,w,0,24)}):Play()
+				end)
 				AddConnection(TextboxActual.FocusLost, function() TextboxConfig.Callback(TextboxActual.Text) if TextboxConfig.TextDisappear then TextboxActual.Text="" end end)
 				TextboxActual.Text = TextboxConfig.Default
 				AddConnection(Click.MouseEnter,      function() TweenService:Create(TextboxFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+3,OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+3)}):Play() end)
