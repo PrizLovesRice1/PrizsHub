@@ -2724,6 +2724,35 @@ function OrionLib:MakeWindow(WindowConfig)
 						Create("UICorner", {CornerRadius=UDim.new(0,4), Parent=box})
 						Create("UIStroke", {Color=Color3.fromRGB(80,30,130), Thickness=1, Parent=box})
 						box.FocusLost:Connect(function() item.Callback(box.Text) end)
+					elseif item.Type == "keybind" then
+						local row = Create("Frame", {BackgroundTransparency=1, Size=UDim2.new(1,0,0,34), ZIndex=61, Parent=pop})
+						Create("TextLabel", {Text=item.Name, Font=Enum.Font.GothamBold, TextSize=12,
+							TextColor3=Color3.fromRGB(200,160,255), BackgroundTransparency=1,
+							Size=UDim2.new(0.55,0,1,0), ZIndex=62, Parent=row})
+						local kbBox = Create("TextButton", {
+							Text = item.Default and (item.Default.Name or tostring(item.Default)) or "None",
+							Font=Enum.Font.GothamBold, TextSize=12,
+							TextColor3=Color3.fromRGB(180,120,255), BackgroundColor3=Color3.fromRGB(30,10,55),
+							BorderSizePixel=0, Size=UDim2.new(0.4,0,0,24), Position=UDim2.new(0.6,0,0.5,-12),
+							ZIndex=62, Parent=row,
+						})
+						Create("UICorner", {CornerRadius=UDim.new(0,4), Parent=kbBox})
+						Create("UIStroke", {Color=Color3.fromRGB(80,30,130), Thickness=1, Parent=kbBox})
+						local listening = false
+						kbBox.MouseButton1Click:Connect(function()
+							listening = true
+							kbBox.Text = "..."
+							local conn
+							conn = UserInputService.InputBegan:Connect(function(inp)
+								if listening and (inp.KeyCode ~= Enum.KeyCode.Unknown or inp.UserInputType == Enum.UserInputType.MouseButton1) then
+									listening = false
+									conn:Disconnect()
+									local key = inp.KeyCode ~= Enum.KeyCode.Unknown and inp.KeyCode or inp.UserInputType
+									kbBox.Text = key.Name
+									item.Callback(key)
+								end
+							end)
+						end)
 					end
 				end
 
@@ -2826,6 +2855,30 @@ function OrionLib:MakeWindow(WindowConfig)
 					ButtonFrame:FindFirstChild("Content").Size = UDim2.new(1, -66, 1, 0)
 				end
 
+				-- gear settings button (opt-in via Options table)
+				if ButtonConfig.Options then
+					local dotBtn = Create("TextButton", {
+						Text             = "gear",
+						FontFace         = MakeBIconFont(),
+						TextSize         = 13,
+						TextColor3       = Color3.fromRGB(140, 80, 200),
+						BackgroundColor3 = Color3.fromRGB(30, 10, 55),
+						BackgroundTransparency = 0,
+						BorderSizePixel  = 0,
+						Size             = UDim2.new(0, 24, 0, 24),
+						Position         = UDim2.new(1, -58, 0.5, -12),
+						ZIndex           = 5,
+						Parent           = ButtonFrame
+					})
+					Create("UICorner", {CornerRadius=UDim.new(0,5), Parent=dotBtn})
+					local _pop, showP, hideP, isOpen, setOpen = MakePopover(dotBtn, ButtonConfig.Options)
+					dotBtn.MouseButton1Click:Connect(function()
+						if isOpen() then hideP() setOpen(false)
+						else showP() setOpen(true) end
+					end)
+					ButtonFrame:FindFirstChild("Content").Size = UDim2.new(1, -66, 1, 0)
+				end
+
 				return Button
 			end
 
@@ -2906,11 +2959,11 @@ function OrionLib:MakeWindow(WindowConfig)
 					ToggleFrame:FindFirstChild("Content").Size = UDim2.new(1, -88, 1, 0)
 				end
 
-				-- "..." options button
+				-- gear settings button (opt-in via Options table)
 				if ToggleConfig.Options then
 					local dotBtn = Create("TextButton", {
-						Text             = "...",
-						Font             = Enum.Font.GothamBold,
+						Text             = "gear",
+						FontFace         = MakeBIconFont(),
 						TextSize         = 13,
 						TextColor3       = Color3.fromRGB(140, 80, 200),
 						BackgroundColor3 = Color3.fromRGB(30, 10, 55),
@@ -3171,7 +3224,11 @@ function OrionLib:MakeWindow(WindowConfig)
 				AddConnection(Click.MouseButton1Down, function() TweenService:Create(BindFrame,TweenInfo.new(0.25,Enum.EasingStyle.Quint,Enum.EasingDirection.Out),{BackgroundColor3=Color3.fromRGB(OrionLib.Themes[OrionLib.SelectedTheme].Second.R*255+6,OrionLib.Themes[OrionLib.SelectedTheme].Second.G*255+6,OrionLib.Themes[OrionLib.SelectedTheme].Second.B*255+6)}):Play() end)
 				function Bind:Set(Key) Bind.Binding=false Bind.Value=Key or Bind.Value Bind.Value=Bind.Value.Name or Bind.Value BindBox.Value.Text=Bind.Value end
 				Bind:Set(BindConfig.Default)
-				task.defer(function()
+				task.spawn(function()
+					for i = 1, 10 do
+						RunService.RenderStepped:Wait()
+						if BindBox.Value.TextBounds.X > 0 then break end
+					end
 					local w = math.clamp(BindBox.Value.TextBounds.X + 16, 24, 130)
 					BindBox.Size = UDim2.new(0,w,0,24)
 				end)
@@ -3220,7 +3277,11 @@ function OrionLib:MakeWindow(WindowConfig)
 				end)
 				AddConnection(TextboxActual.FocusLost, function() TextboxConfig.Callback(TextboxActual.Text) if TextboxConfig.TextDisappear then TextboxActual.Text="" end end)
 				TextboxActual.Text = TextboxConfig.Default
-				task.defer(function()
+				task.spawn(function()
+					for i = 1, 10 do
+						RunService.RenderStepped:Wait()
+						if TextboxActual.TextBounds.X > 0 or TextboxConfig.Default == "" then break end
+					end
 					local w = math.clamp(TextboxActual.TextBounds.X + 16, 24, 130)
 					TextContainer.Size = UDim2.new(0,w,0,24)
 				end)
