@@ -1,348 +1,427 @@
-# PrizsHubZ
+# DuvomeLib
 
-# Duvome UI Library
-
-> A heavily customized Orion-based UI library for Roblox exploit hubs. Deep purple theme, snow animations, avatar panels, collapsible sidebar, key system, and more.
+DuvomeLib is a UI library for Roblox scripts. It has a dark purple look with a lot of glow and smooth animations. You can use it to build menus with buttons, toggles, sliders, dropdowns, and more. It also saves user settings and lets people pick their own colors.
 
 ---
 
 ## Quick Start
 
+Here is the smallest example that works:
+
 ```lua
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/PrizLovesRice1/PrizsHub/main/OrionLib.lua"))()
+local Duvome = loadstring(game:HttpGet("https://raw.githubusercontent.com/PrizLovesRice1/PrizsHub/refs/heads/main/DuvomeLib.lua"))()
+
+local Window = Duvome:MakeWindow({
+    Name         = "My Hub",
+    SaveConfig   = true,
+    ConfigFolder = "MyHubConfigs",
+    Theme        = "Default",
+})
+
+local Tab = Window:MakeTab({Name = "Main", Icon = "house", Columns = true})
+local Left, Right = Tab:AddLeft(), Tab:AddRight()
+local Section = Left:AddSection({Name = "Features"})
+
+Section:AddButton({
+    Name = "Click Me",
+    Callback = function() print("clicked") end
+})
+
+Duvome:Init()   -- always call this at the very end
 ```
+
+The order goes like this: Window, then Tab, then Column (Left, Right, or Auto), then Section, then your buttons and toggles.
 
 ---
 
-## Creating a Window
+## Window
+
+This is where you set up the main menu.
 
 ```lua
-local Window = OrionLib:MakeWindow({
-    Name = "My Hub",
-    IntroEnabled = true,
-    IntroText = "My Hub",
-    SaveConfig = false,
-    ConfigFolder = "MyHubConfig",
-    HidePremium = false,
-    CloseCallback = function()
-        -- fired when the close button is clicked
-    end
+local Window = Duvome:MakeWindow({
+    Name           = "My Hub",
+    Icon           = "rbxassetid://...",
+    ShowIcon       = true,
+    IconFont       = "rbxasset://...",
+    SaveConfig     = true,
+    ConfigFolder   = "MyHubConfigs",
+    AutoLoadConfig = false,
+    Theme          = "Default",
+    HidePremium    = true,
+    IntroEnabled   = false,
+    IntroText      = "My Hub",
+    IntroIcon      = "rbxassetid://...",
+    Blur           = false,
+    BlurSize       = 8,
+    CloseCallback  = function() end,
 })
 ```
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `Name` | string | `"Duvome"` | Title shown in the top bar |
-| `IntroEnabled` | bool | `true` | Show intro animation on load |
-| `IntroText` | string | `"Orion Library"` | Text during intro |
-| `SaveConfig` | bool | `false` | Auto-save/load flags to file |
-| `ConfigFolder` | string | `Name` | Folder name for saved configs |
-| `HidePremium` | bool | `false` | Hide premium-only tabs |
-| `CloseCallback` | function | `nil` | Called when UI is closed |
+Press **RightShift** to hide or show the menu. Users can change this key later in the settings.
 
 ---
 
-## Creating a Tab
+## Tabs
 
 ```lua
 local Tab = Window:MakeTab({
-    Name = "Main",
-    Icon = "house",          -- BuilderIcons name
+    Name        = "Main",
+    Icon        = "house",
+    Columns     = true,
     PremiumOnly = false,
-    Columns = false          -- set true for two-column layout
 })
+
+local Left  = Tab:AddLeft()
+local Right = Tab:AddRight()
+local Auto  = Tab:AddAuto()   -- picks left or right for you
 ```
 
-> Icons use the Roblox **BuilderIcons** font. Pass the icon name as a string e.g. `"sword"`, `"gear"`, `"house"`.
-
----
-
-## Elements
-
-### Section
+## Sections
 
 ```lua
-local Section = Tab:AddSection({
-    Name = "Combat",
-    Collapsible = false   -- set true to make it collapse/expand
+local Section = Left:AddSection({
+    Name        = "Combat",
+    Collapsible = true,   -- click the title to fold it away
 })
 ```
 
 ---
 
-### Toggle
+## Buttons, Toggles, and Sliders
 
-```lua
-local Toggle = Section:AddToggle({
-    Name = "Auto Farm",
-    Default = false,
-    Flag = "AutoFarm",
-    Save = true,
-    ShowKeybind = true,       -- shows a keybind box next to the toggle
-    Keybind = Enum.KeyCode.F, -- optional default keybind
-    Color = Color3.fromRGB(120, 50, 200),
-    Callback = function(Value)
-        print("Auto Farm:", Value)
-    end
-})
-
--- Manually set value
-Toggle:Set(true)
-```
-
----
+Everything below goes inside a Section.
 
 ### Button
 
 ```lua
-local Button = Section:AddButton({
-    Name = "Teleport",
-    Callback = function()
-        print("Teleport clicked")
-    end,
+Section:AddButton({
+    Name        = "Do Thing",
+    Icon        = "rbxassetid://...",
+    Tooltip     = "Shows up when you hover",
     ShowKeybind = true,
-    Keybind = Enum.KeyCode.T,
-    -- Optional gear panel with sub-settings:
-    Options = {
-        { Type = "slider", Name = "Speed",    Min = 1, Max = 100, Default = 16, Callback = function(v) end },
-        { Type = "input",  Name = "Place",    Default = "Spawn",               Callback = function(v) end },
-        { Type = "keybind",Name = "Bind",     Default = Enum.KeyCode.T,        Callback = function(v) end },
-    }
+    Callback    = function() end,
+    Options     = { ... },   -- see Gear Popovers below
 })
-
-Button:Set("New Label")
 ```
 
----
+### Toggle
+
+```lua
+Section:AddToggle({
+    Name        = "ESP",
+    Default     = false,
+    Color       = Color3.fromRGB(255,120,0),
+    Flag        = "esp_enabled",
+    Save        = true,
+    Tooltip     = "Draws boxes around players",
+    ShowKeybind = true,
+    Callback    = function(value) end,
+    Options     = { ... },
+})
+```
+
+You get back an object. You can call `:Set(true)` or `:SetVisible(false)` on it later.
 
 ### Slider
 
 ```lua
-local Slider = Section:AddSlider({
-    Name = "Walk Speed",
-    Min = 16,
-    Max = 500,
-    Default = 16,
+Section:AddSlider({
+    Name      = "Walk Speed",
+    Min       = 16,
+    Max       = 300,
+    Default   = 16,
     Increment = 1,
-    Suffix = "studs/s",
-    Flag = "WalkSpeed",
-    Save = true,
-    Color = Color3.fromRGB(120, 50, 200),
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-    end
+    ValueName = "spd",
+    Flag      = "walkspeed",
+    Save      = true,
+    Color     = Color3.fromRGB(80,220,120),
+    Callback  = function(value) end,
 })
-
-Slider:Set(100)
 ```
 
----
+You can drag the slider, or click the number box on the right and just type a value.
+
+### Range Slider
+
+This one has two handles so users can pick a low and high number.
+
+```lua
+Section:AddRangeSlider({
+    Name       = "Price Range",
+    Min        = 0,
+    Max        = 1000,
+    DefaultMin = 100,
+    DefaultMax = 750,
+    Increment  = 25,
+    ValueName  = "$",
+    Flag       = "price_range",
+    Color      = Color3.fromRGB(80,220,120),
+    Callback   = function(min, max) end,
+})
+```
 
 ### Dropdown
 
 ```lua
-local Dropdown = Section:AddDropdown({
-    Name = "Select Aura",
-    Options = { "None", "Fire", "Ice", "Lightning" },
-    Default = "None",
-    Flag = "SelectedAura",
-    Save = true,
-    Callback = function(Value)
-        print("Selected:", Value)
-    end
+Section:AddDropdown({
+    Name        = "Select Item",
+    Options     = {"Apple", "Banana", "Cherry"},
+    Default     = "Apple",
+    MultiSelect = false,
+    Search      = true,
+    SelectAll   = true,
+    Flag        = "item_choice",
+    Save        = true,
+    Callback    = function(value) end,
 })
-
--- Add or replace options at runtime
-Dropdown:Refresh({ "None", "Fire", "Ice" }, true)  -- second arg = delete old
-Dropdown:Set("Fire")
 ```
 
----
-
-### Colorpicker
-
-```lua
-local Picker = Section:AddColorpicker({
-    Name = "Trail Color",
-    Default = Color3.fromRGB(180, 100, 255),
-    Flag = "TrailColor",
-    Save = true,
-    Callback = function(Value)
-        print("Color:", Value)
-    end
-})
-
-Picker:Set(Color3.fromRGB(255, 0, 0))
-```
-
----
+If `MultiSelect` is on, the callback gives you a table instead of one value. `Search` adds a small search bar. `SelectAll` adds two buttons for picking or clearing everything at once.
 
 ### Textbox
 
 ```lua
 Section:AddTextbox({
-    Name = "Player Name",
-    Default = "",
-    TextDisappear = false,   -- clears text after focus lost if true
-    Callback = function(Value)
-        print("Entered:", Value)
-    end
+    Name           = "Your Name",
+    Default        = "",
+    TextDisappear  = false,
+    Callback       = function(text) end,
 })
 ```
 
----
-
-### Bind
+### Keybind
 
 ```lua
-local Bind = Section:AddBind({
-    Name = "Noclip Key",
-    Default = Enum.KeyCode.N,
-    Hold = false,   -- true = fires on hold, false = fires on press
-    Flag = "NoclipBind",
-    Save = true,
-    Callback = function()
-        print("Noclip toggled")
-    end
+Section:AddBind({
+    Name     = "Toggle Fly",
+    Default  = Enum.KeyCode.F,
+    Mode     = "toggle",
+    Interval = 0.5,
+    Modifier = Enum.KeyCode.LeftControl,
+    Flag     = "fly_key",
+    Save     = true,
+    Callback = function(state) end,
 })
-
-Bind:Set(Enum.KeyCode.N)
 ```
 
----
+Three modes to pick from:
+- **press** fires one time when you hit the key
+- **toggle** flips something on and off
+- **hold** keeps firing over and over while you hold it down
 
-### Label
+Hit Backspace while picking a new key to clear it. If someone tries to use a key that is already taken, they get a warning instead.
+
+### Colorpicker
 
 ```lua
-local Label = Section:AddLabel("Status: Idle")
-
-Label:Set("Status: Running")
+Section:AddColorpicker({
+    Name         = "Box Color",
+    Default      = Color3.fromRGB(255, 0, 80),
+    UseAlpha     = true,
+    DefaultAlpha = 0,
+    Flag         = "box_color",
+    Callback     = function(color, alpha) end,
+})
 ```
 
----
-
-### Paragraph
-
-```lua
-local Para = Section:AddParagraph("Info", "This is a description that wraps automatically.")
-
-Para:Set("Updated content here.")
-```
-
----
+Click the little color box to open the full picker.
 
 ### Search
 
+A standalone search bar that filters a list you give it.
+
 ```lua
 Section:AddSearch({
-    Name = "Find Player",
-    Placeholder = "Type a name...",
-    Items = { "Player1", "Player2", "Player3" },
-    Callback = function(Value)
-        print("Picked:", Value)
-    end
+    Name        = "Find Item",
+    Items       = {"Apple", "Banana", "Cherry"},
+    Placeholder = "Type to search...",
+    Callback    = function(item) end,
 })
 ```
 
----
-
-### Divider
+### Labels, Paragraphs, and Dividers
 
 ```lua
-Section:AddDivider()
+Section:AddLabel("A plain line of text")
+
+Section:AddParagraph("Title", "Longer text that wraps onto more than one line.")
+
+Section:AddDivider()   -- just a line to split things up
 ```
 
 ---
 
-## Two-Column Layout
+## Gear Popovers
 
-Pass `Columns = true` when creating a tab, then use `:AddLeft()`, `:AddRight()`, or `:AddAuto()` instead of the tab directly.
-
-```lua
-local Tab = Window:MakeTab({ Name = "Settings", Columns = true })
-
-local Left  = Tab:AddLeft()
-local Right = Tab:AddRight()
-
-Left:AddSection({ Name = "Left Side" })
-Right:AddSection({ Name = "Right Side" })
-
--- Or alternate automatically:
-Tab:AddAuto():AddToggle({ Name = "Option A", Callback = function() end })
-Tab:AddAuto():AddToggle({ Name = "Option B", Callback = function() end })
-```
-
----
-
-## Key System
-
-Place this **before** building your window. Pass a callback — it fires once the key is verified.
+You can add a small gear icon to a toggle or button that opens extra settings when clicked.
 
 ```lua
-OrionLib.MakeKeyUI({
-    Title      = "My Hub",
-    Subtitle   = "Key System",
-    Note       = "Get your key from our Discord.",
-    FileName   = "MyHub_Key",    -- saved to file so user only enters once per HWID
-    SaveKey    = true,
-    Key        = { "mykey123" }, -- string, table of strings, or an http URL that returns keys
-}, function()
-    -- key accepted — build your window here
-    local Window = OrionLib:MakeWindow({ Name = "My Hub" })
-    -- ...
-end)
+Section:AddToggle({
+    Name = "ESP",
+    Callback = function(v) end,
+    Options = {
+        {Type = "colorpicker", Name = "Box Color", Default = Color3.fromRGB(255,0,80), UseAlpha = true,
+            Callback = function(c, a) end,
+            OnSelect = function(c, a) end},
+
+        {Type = "toggle", Name = "Show Names", Default = true,
+            Callback = function(v) end},
+
+        {Type = "slider", Name = "Max Distance", Min = 50, Max = 2000, Default = 300,
+            Callback = function(v) end},
+
+        {Type = "input", Name = "Label", Default = "Player",
+            Callback = function(text) end},
+
+        {Type = "keybind", Name = "Toggle Key", Default = nil,
+            OnPress = function() end,
+            OnBind  = function(key) end},
+    }
+})
 ```
 
-| Option | Type | Description |
-|---|---|---|
-| `Title` | string | Panel title |
-| `FileName` | string | File to save the verified key to |
-| `SaveKey` | bool | Remember key per HWID (default `true`) |
-| `Key` | string / table / URL | Valid key(s). If a URL, fetches and reads each line as a key |
-
----
-
-## Flags
-
-Every element with a `Flag` field is registered in `OrionLib.Flags`. You can read or set them globally:
-
-```lua
--- Read
-print(OrionLib.Flags["WalkSpeed"].Value)
-
--- Set
-OrionLib.Flags["AutoFarm"]:Set(true)
-```
+The types you can use are colorpicker, toggle, slider, input, and keybind.
 
 ---
 
 ## Notifications
 
 ```lua
-OrionLib:MakeNotification({
-    Name    = "Update",
-    Content = "Hub loaded successfully.",
-    Image   = "rbxassetid://4384403532",
-    Time    = 5
+Duvome:MakeNotification({
+    Name    = "Success",
+    Content = "Everything worked.",
+    Type    = "success",
+    Time    = 4,
+    Actions = {
+        {Text = "Undo",   Callback = function() end},
+        {Text = "Dismiss", Callback = function() end, Close = true},
+    }
+})
+```
+
+Type can be info, success, warning, error, or left out for a plain look.
+
+## Prompt Dialog
+
+A pop up box asking the user to confirm something. Only one shows at a time.
+
+```lua
+Duvome:Prompt({
+    Title   = "Reset Everything",
+    Content = "This will wipe all saved settings. Are you sure?",
+    Options = {
+        {Text = "Cancel", Callback = function() end},
+        {Text = "Reset",  Callback = function() end},
+    }
 })
 ```
 
 ---
 
-## Toggle Keybind
+## Themes and Colors
 
-The default toggle key is **RightShift**. Players can change it inside the gear (⚙) menu in the top bar.
-
----
-
-## Destroy
+There are five themes built in: Default, Ocean, Crimson, Emerald, and Midnight.
 
 ```lua
-OrionLib:Destroy()
+Duvome:SetTheme("Ocean")
+local names = Duvome:GetThemes()
+
+Duvome:SetAccent(Color3.fromRGB(45, 200, 110))
 ```
+
+`SetAccent` lets you build a whole new theme from just one color. It picks matching backgrounds and text colors on its own. If someone picks a very dark or grey color, the text stays neutral grey and white instead of turning that color too.
+
+Users can also pick a theme from the gear icon at the top of the window. This has the five themes plus a full color picker. If they pick a custom color, it gets saved with their config and comes back next time.
 
 ---
 
-## Credits
+## Watch List
 
-Built on a customized fork of [OrionLib](https://github.com/shlexware/Orion) with icons from Roblox BuilderIcons and [lucideblox](https://github.com/evoincorp/lucideblox).
+A small box that floats on screen and shows which features are turned on. It works for keybinds and for regular toggles too.
+
+```lua
+local flying = false
+
+Duvome:AddWatch("Fly", function() return flying end, Enum.KeyCode.F)
+Duvome:AddWatch("God Mode", function() return godMode end)
+Duvome:AddWatch("FPS", function() return currentFps .. " fps" end)
+
+Duvome:SetWatchVisible(false)
+```
+
+If your function returns true or false, it shows ON or OFF. If it returns a string, that string just shows as is. Users can turn the whole list off from the settings menu too.
+
+---
+
+## Saving Configs
+
+Turn on `SaveConfig = true` and give your elements a `Flag`. Users can click the pencil icon at the bottom left to name and save their setup, load it later, or copy it to their clipboard.
+
+```lua
+Section:AddToggle({Name = "ESP", Flag = "esp_enabled", Save = true, Callback = function(v) end})
+```
+
+You can read saved values like this:
+
+```lua
+local value = Duvome.Flags["esp_enabled"].Value
+```
+
+Custom colors and the picked theme get saved too.
+
+---
+
+## Side Panels
+
+**Avatar panel:** click your profile picture on the side. It shows your name, username, user id, account age, executor, the game's name, the place id, and a live list of players in the server. Click a player to copy their user id.
+
+**Config panel:** click the pencil icon. This is where you save, load, and export configs.
+
+Both panels slide in and follow the window if you drag it around. They also snap to either side of the window. They will never sit on the same side at the same time. If one is on the right, the other moves to the left.
+
+---
+
+## Other Useful Methods
+
+```lua
+Duvome:Init()
+Duvome:IsRunning()
+Duvome:Destroy()
+Duvome:SetWatchVisible(true)
+```
+
+Always call `Init()` last, after you finish building everything.
+
+---
+
+## Controlling Elements Later
+
+Most elements give you back something you can control after you make them.
+
+```lua
+local toggle = Section:AddToggle({Name = "ESP", Callback = function(v) end})
+
+toggle:Set(true)
+toggle:SetVisible(false)
+```
+
+| Method | Works on |
+|---|---|
+| `:Set(value)` | Toggle, Slider, Dropdown, Textbox, Bind, Colorpicker, Label, Paragraph |
+| `:SetVisible(bool)` | Toggle, Slider, Button, Dropdown, Bind, Colorpicker |
+| `:Refresh(options, clear)` | Dropdown |
+
+---
+
+## Mobile
+
+When the UI is hidden, a small circle button shows up so people on phones can bring it back. Phones don't have a keyboard for the toggle key, so this is how they reopen the menu. Users can drag the circle around without it accidentally reopening the menu.
+
+---
+
+## Good to Know
+
+- Always call `Duvome:Init()` after you build your whole menu, not before.
+- Long text gets cut off cleanly instead of overlapping other stuff.
+- The blur setting covers the whole screen, not just the menu. Roblox does not let you blur only one shape on screen.
